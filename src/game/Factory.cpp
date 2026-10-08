@@ -37,12 +37,12 @@ int Factory::getHeight() const { return height_; }
 int Factory::getWidth() const { return width_; }
 
 std::unique_ptr<Robot> Factory::spawn() {
-    if (stepCounter_ < getSpawnInterval()) {
+    if (stepCounter_ != getSpawnInterval() - 1) {
         return nullptr;
     }
     return std::make_unique<Robot>(spawningRobot_);
 }
 
 void Factory::onTurnEnd() {
-    stepCounter_ = (stepCounter_ + 1) % (getSpawnInterval() + 1);
+    stepCounter_ = (stepCounter_ + 1) % (getSpawnInterval());
 }

@@ -12,7 +12,7 @@ class Factory {
     int height_;
     int width_;
     int spawnInterval_ = defaultSpawnInterval;
-    int stepCounter_ = 1;
+    int stepCounter_ = 0;
 
    public:
     Factory(Robot spawningRobot, int height = 2, int width = 2);
