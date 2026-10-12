@@ -34,5 +34,5 @@ class Factory {
 
     std::unique_ptr<Robot> spawn();
 
-    virtual void onTurnEnd();
+    void onTurnEnd();
 };
