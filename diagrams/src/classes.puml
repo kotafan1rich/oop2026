@@ -1,0 +1,245 @@
+@startuml
+title Диаграмма классов лабораторной работы № 1
+top to bottom direction
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam shadowing false
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #DCE6F4
+  BorderColor #354A63
+  ArrowColor #354A63
+}
+
+enum TerrainType {
+  Floor
+  Wall
+  Swamp
+}
+
+enum Team {
+  Friend
+  Enemy
+}
+
+enum Command {
+  Up
+  Down
+  Right
+  Left
+  Wait
+  Quit
+  None
+}
+
+class Point {
+  - x_ : int
+  - y_ : int
+  + Point(int x, int y)
+  + setX(int x) : void
+  + setY(int y) : void
+  + getX() const : int
+  + getY() const : int
+  + operator==(const Point& other) const : bool
+  + operator!=(const Point& other) const : bool
+}
+
+class Robot {
+  - point_ : Point
+  - team_ : Team
+  - health_ : int
+  - maxHealth_ : int
+  - attack_ : int
+  - speed_ : int
+  - energy_ : int
+  - maxEnergy_ : int
+  - healCount_ : int
+  + Robot(int speed = defaultSpeed)
+  + getX() const : int
+  + getY() const : int
+  + getPosition() : Point&
+  + getPosition() const : const Point&
+  + setPosition(const Point& point) : void
+  + getHealth() const : int
+  + setMaxHealth(int maxHealth) : void
+  + getMaxHealth() const : int
+  + setAttack(int attack) : void
+  + getAttack() const : int
+  + setSpeed(int speed) : void
+  + getSpeed() const : int
+  + getEnergy() const : int
+  + setMaxEnergy(int maxEnergy) : void
+  + getMaxEnergy() const : int
+  + expendEnergy(int value) : void
+  + restoreEnergy(int value) : void
+  + heal(int amount) : void
+  + virtual interact(Robot& other) : bool
+  + getHealCount() const : int
+  + setHealCount(int newHeal) : void
+  + getTeam() const : Team
+  + setTeam(Team team) : void
+  + isDead() const : bool
+  + virtual onTurnEnd() : void
+}
+
+class Player {
+  - experience_ : int
+  - level_ : int
+  - visibiltyRadius_ : int
+  + Player()
+  + getExperience() const : int
+  + getLevel() const : int
+  + expToNextLevel() const : int
+  + getVisibiltyRadius() const : int
+  + isInRadius(const Point& target) const : bool
+  + interact(Robot& other) : bool <<override>>
+  + onTurnEnd() : void
+}
+
+class Cell {
+  - terrainType_ : TerrainType
+  - movementCost_ : int
+  - isSeen_ : bool
+  - robot_ : Robot*
+  - factory_ : Factory*
+  + Cell(int movementCost = defaultMovementCost)
+  + getTerrainType() const : TerrainType
+  + setTerrainType(TerrainType type) : void
+  + isWalkable() const : bool
+  + getMovementCost() const : int
+  + setMovementCost(int movementCost) : void
+  + setRobot(Robot* robot) : void
+  + getRobot() const : Robot*
+  + removeRobot() : Robot*
+  + setFactory(Factory* factory) : void
+  + markSeen() : void
+  + isSeen() const : bool
+  + isTaken() const : bool
+}
+
+class Factory {
+  - spawningRobot_ : Robot
+  - point_ : Point
+  - height_ : int
+  - width_ : int
+  - spawnInterval_ : int
+  - stepCounter_ : int
+  + Factory(Robot spawningRobot, int height = 2, int width = 2)
+  + getX() const : int
+  + getY() const : int
+  + getPosition() : Point&
+  + setPosition(const Point& point) : void
+  + setSpawnInterval(int interval) : void
+  + getHeight() const : int
+  + getWidth() const : int
+  + spawn() : std::unique_ptr<Robot>
+  + onTurnEnd() : void
+}
+
+class PathFinder {
+  - world_ : const World&
+  - distances_ : std::vector<int>
+  - target_ : Point
+  - ready_ : bool
+  + PathFinder(const World& world)
+  + buildDistanceMap(const Point& target) : void
+  + buildDistanceMap(const Point& target, const Point& start) : void
+  + getNextPoint(const Point& from) const : Point
+  + getDistanceMap() : const std::vector<int>&
+}
+
+class World {
+  - height_ : int
+  - width_ : int
+  - field_ : std::vector<std::vector<Cell>>
+  - robots_ : std::vector<std::unique_ptr<Robot>>
+  - factories_ : std::vector<std::unique_ptr<Factory>>
+  - player_ : std::unique_ptr<Player>
+  - pathFinder_ : PathFinder
+  + World(int height, int width)
+  + getWidth() const : int
+  + getHeight() const : int
+  + getCell(const Point& point) const : const Cell&
+  + addRobot(std::unique_ptr<Robot> robot) : void
+  + getRobots() const : const std::vector<std::unique_ptr<Robot>>&
+  + moveBots() : void
+  + addFactory(std::unique_ptr<Factory> factory, const Point& point) : void
+  + getFactories() const : const std::vector<std::unique_ptr<Factory>>&
+  + addPlayer(std::unique_ptr<Player> player) : void
+  + getPlayer() const : const Player&
+  + movePlayer(int dx, int dy) : bool
+  + isInside(const Point& point) const : bool
+  + markSeen() : void
+  + endTurn() : bool
+}
+
+class Terminal {
+  - oldTerminal : termios
+  - oldFlags : int
+  + Terminal()
+  + readChar() const : char
+  + draw(std::string_view out) : void
+}
+
+class Input {
+  - terminal_ : Terminal&
+  + Input(Terminal& terminal)
+  + getCommand() const : Command
+}
+
+class RenderIcons <<struct>> {
+  + floor : char
+  + wall : char
+  + swamp : char
+  + player : char
+  + enemy : char
+  + friendly : char
+  + factory : char
+  + deadRobot : char
+  + unknown : char
+}
+
+class Renderer {
+  - icons_ : RenderIcons
+  - buffer_ : std::string
+  + Renderer()
+  + render(const World& world) : std::string_view
+}
+
+class Game {
+  - terminal_ : Terminal
+  - renderer_ : Renderer
+  - input_ : Input
+  - world_ : World
+  + Game(int height, int width)
+  + Run() : void
+}
+
+Player --|> Robot
+Robot *-- Point : point_
+Robot --> Team : team_
+Player ..> Point : isInRadius()
+Cell --> TerrainType : terrainType_
+Cell --> Robot : robot_ (наблюдение)
+Cell --> Factory : factory_ (наблюдение)
+Factory *-- Robot : spawningRobot_
+Factory *-- Point : point_
+Factory ..> Robot : spawn()
+World *-- "0..*" Cell : field_
+World *-- "0..*" Robot : robots_ / unique_ptr
+World *-- "0..*" Factory : factories_ / unique_ptr
+World *-- "0..1" Player : player_ / unique_ptr
+World *-- PathFinder : pathFinder_
+PathFinder --> World : world_ (const ссылка)
+PathFinder *-- Point : target_
+Game *-- Terminal : terminal_
+Game *-- Renderer : renderer_
+Game *-- Input : input_
+Game *-- World : world_
+Input --> Terminal : terminal_ (ссылка)
+Input ..> Command : getCommand()
+Game ..> Command : обрабатывает
+Renderer *-- RenderIcons : icons_
+Renderer ..> World : render()
+
+@enduml
