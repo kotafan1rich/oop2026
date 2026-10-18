@@ -25,11 +25,13 @@ void Renderer::drawField(const World& world, const int rowLength) {
     const int height = world.getHeight();
     buffer_.resize(height * rowLength);
 
+    const Player& player = world.getPlayer();
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             Point point(x, y);
             const Cell& cell = world.getCell(point);
-            setSymbol(point, rowLength, getTerrainSymbol(cell));
+            setSymbol(point, rowLength,
+                      getTerrainSymbol(cell, player.isInRadius(point)));
         }
         setSymbol(Point(width, y), rowLength, '\n');
     }
@@ -37,6 +39,8 @@ void Renderer::drawField(const World& world, const int rowLength) {
 
 void Renderer::drawFactory(const World& world, const int rowLength) {
     RenderIcons icons = getIcons();
+    const Player& player = world.getPlayer();
+
     for (const auto& factory : world.getFactories()) {
         if (factory == nullptr) {
             continue;
@@ -49,7 +53,8 @@ void Renderer::drawFactory(const World& world, const int rowLength) {
                 const Cell& cell = world.getCell(point);
 
                 if (cell.isSeen()) {
-                    setSymbol(point, rowLength, icons.factory);
+                    setSymbol(point, rowLength,
+                              getFactorySymbol(player.isInRadius(point)));
                 }
             }
         }
@@ -101,16 +106,22 @@ void Renderer::setSymbol(const Point& point, const int rowLength, char symbol) {
     }
 }
 
-char Renderer::getTerrainSymbol(const Cell& cell) const {
+char Renderer::getTerrainSymbol(const Cell& cell, bool inRadius) const {
     RenderIcons icons = getIcons();
 
     if (!cell.isSeen()) {
         return icons.floor;
     }
 
-    switch (cell.getTerrainType()) {
-        case TerrainType::Floor:
-            return icons.floor;
+    TerrainType terrainType = cell.getTerrainType();
+    if (terrainType == TerrainType::Floor) {
+        return icons.floor;
+    }
+    if (!inRadius) {
+        return icons.unknown;
+    }
+
+    switch (terrainType) {
         case TerrainType::Wall:
             return icons.wall;
         case TerrainType::Swamp:
@@ -131,4 +142,13 @@ char Renderer::getRobotSymbol(const Robot& robot) const {
     }
 
     return icons.enemy;
+}
+
+char Renderer::getFactorySymbol(bool inRadius) const {
+    RenderIcons icons = getIcons();
+    if (inRadius) {
+        return icons.factory;
+    } else {
+        return icons.unknown;
+    }
 }

@@ -145,7 +145,7 @@ void World::addRobot(std::unique_ptr<Robot> robot) {
     }
     Cell& cell = getCell(robot->getPosition());
     if (cell.isWalkable() && !cell.isTaken()) {
-        cell.setRobot(robot.get());
+        cell.setOccupantType(OccupantType::Robot);
         robots_.push_back(std::move(robot));
     }
 }
@@ -163,21 +163,20 @@ MoveResult World::moveRobot(Robot& robot, int dx, int dy) {
         return MoveResult::Blocked;
     }
 
-    Robot* other = nextCell.getRobot();
-
-    if (other) {
-        bool isDead = robot.interact(*other);
+    if (nextCell.getOccupantType() == OccupantType::Robot) {
+        Robot& other = findRobotAt(nextPoint);
+        bool isDead = robot.interact(other);
 
         if (isDead) {
-            killRobot(*other);
+            killRobot(other);
         }
 
         return MoveResult::Interacted;
     }
 
-    getCell(robot.getPosition()).removeRobot();
+    getCell(robot.getPosition()).clearOccupant();
     robot.setPosition(nextPoint);
-    nextCell.setRobot(&robot);
+    nextCell.setOccupantType(OccupantType::Robot);
 
     return MoveResult::Moved;
 }
@@ -226,15 +225,37 @@ bool World::moveRobotUsingSpeed(
 }
 
 void World::killRobot(Robot& robot) {
-    Robot* target = getCell(robot.getPosition()).removeRobot();
+    getCell(robot.getPosition()).clearOccupant();
 
-    std::erase_if(robots_, [target](const std::unique_ptr<Robot>& pointer) {
-        return pointer.get() == target;
+    std::erase_if(robots_, [&robot](const std::unique_ptr<Robot>& pointer) {
+        return pointer.get() == &robot;
     });
 }
 
 const std::vector<std::unique_ptr<Robot>>& World::getRobots() const {
     return robots_;
+}
+
+Robot& World::findRobotAt(const Point& point) const {
+    if (getPlayer().getPosition() == point) {
+        return *player_;
+    }
+
+    for (auto& robot : robots_) {
+        if (robot->getPosition() == point) {
+            return *robot;
+        }
+    }
+    throw std::out_of_range("Robot not found");
+}
+
+bool World::hasRobotAt(const Point& point) const {
+    try {
+        findRobotAt(point);
+        return true;
+    } catch (const std::exception& e) {
+        return false;
+    }
 }
 
 void World::moveBots() {
@@ -282,7 +303,7 @@ void World::addFactory(std::unique_ptr<Factory> factory, const Point& point) {
     for (int dy = 0; dy < factory->getHeight(); dy++) {
         for (int dx = 0; dx < factory->getWidth(); dx++) {
             Point cellPoint(point.getX() + dx, point.getY() + dy);
-            getCell(cellPoint).setFactory(factory.get());
+            getCell(cellPoint).setOccupantType(OccupantType::Factory);
         }
     }
     factories_.push_back(std::move(factory));
@@ -298,7 +319,7 @@ void World::addPlayer(std::unique_ptr<Player> player) {
     }
     Cell& cell = getCell(player->getPosition());
     if (cell.isWalkable() && !cell.isTaken()) {
-        cell.setRobot(player.get());
+        cell.setOccupantType(OccupantType::Robot);
         player_ = std::move(player);
         return;
     }
@@ -379,10 +400,9 @@ bool World::endTurn() {
     if (player_) {
         player_->onTurnEnd();
     }
-    const bool hasEnemies = std::any_of(
-        robots_.begin(), robots_.end(), [](const auto& robot) {
-            return robot && !robot->isDead() &&
-                   robot->getTeam() == Team::Enemy;
+    const bool hasEnemies =
+        std::any_of(robots_.begin(), robots_.end(), [](const auto& robot) {
+            return robot && !robot->isDead() && robot->getTeam() == Team::Enemy;
         });
     if (!hasEnemies || getPlayer().isDead()) {
         return true;

@@ -50,6 +50,8 @@ class World {
     bool moveRobotWithSpeed(Robot& robot, int dx, int dy);
     void killRobot(Robot& robot);
     const std::vector<std::unique_ptr<Robot>>& getRobots() const;
+    Robot& findRobotAt(const Point& point) const;
+    bool hasRobotAt(const Point& point) const;
 
     void moveBots();
 

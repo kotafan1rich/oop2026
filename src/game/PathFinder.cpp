@@ -58,10 +58,10 @@ void PathFinder::buildDistanceMap(const Point& target, const Point& start) {
 
             const int nextIndex = nextPoint.getY() * width + nextPoint.getX();
             const Cell& cell = world_.getCell(nextPoint);
-            const bool occupiedByRobot = cell.getRobot() != nullptr;
-            if (!cell.isWalkable() ||
-                (occupiedByRobot && nextPoint != target &&
-                 nextPoint != start)) {
+            const bool occupiedByRobot =
+                cell.getOccupantType() != OccupantType::Empty;
+            if (!cell.isWalkable() || (occupiedByRobot && nextPoint != target &&
+                                       nextPoint != start)) {
                 continue;
             }
 
@@ -121,6 +121,4 @@ Point PathFinder::getNextPoint(const Point& from) const {
     return bestPoint;
 }
 
-const std::vector<int>& PathFinder::getDistanceMap() {
-    return distances_;
-}
+const std::vector<int>& PathFinder::getDistanceMap() { return distances_; }

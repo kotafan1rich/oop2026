@@ -10,13 +10,18 @@ constexpr int impassableMovementCost = 0;
 
 enum class TerrainType { Floor, Wall, Swamp };
 
+enum class OccupantType {
+    Empty,
+    Factory,
+    Robot,
+};
+
 class Cell {
    private:
     TerrainType terrainType_ = TerrainType::Floor;
     int movementCost_;
     bool isSeen_ = false;
-    Robot* robot_ = nullptr;
-    Factory* factory_ = nullptr;
+    OccupantType occupant_ = OccupantType::Empty;
 
    public:
     Cell(int movementCost = defaultMovementCost);
@@ -30,13 +35,9 @@ class Cell {
     int getMovementCost() const;
     void setMovementCost(int movementCost);
 
-    void setRobot(Robot* robot);
-    Robot* getRobot() const;
-    Robot* removeRobot();
-
-    void setFactory(Factory* factory);
-    Factory* getFactory() const;
-    Factory* removeFactory();
+    OccupantType getOccupantType() const;
+    void setOccupantType(OccupantType occupant);
+    void clearOccupant();
 
     void markSeen();
     bool isSeen() const;

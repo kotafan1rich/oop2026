@@ -35,6 +35,7 @@ class Renderer {
     void drawInterface(const World& world);
     void setSymbol(const Point& point, const int rowLength, char symbol);
 
-    char getTerrainSymbol(const Cell& cell) const;
+    char getTerrainSymbol(const Cell& cell, bool inRadius) const;
     char getRobotSymbol(const Robot& robot) const;
+    char getFactorySymbol(bool inRadius) const;
 };

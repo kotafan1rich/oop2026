@@ -17,6 +17,18 @@ enum TerrainType {
   Swamp
 }
 
+enum OccupantType {
+  Empty
+  Factory
+  Robot
+}
+
+enum MoveResult {
+  Blocked
+  Moved
+  Interacted
+}
+
 enum Team {
   Friend
   Enemy
@@ -100,18 +112,16 @@ class Cell {
   - terrainType_ : TerrainType
   - movementCost_ : int
   - isSeen_ : bool
-  - robot_ : Robot*
-  - factory_ : Factory*
+  - occupant_ : OccupantType
   + Cell(int movementCost = defaultMovementCost)
   + getTerrainType() const : TerrainType
   + setTerrainType(TerrainType type) : void
   + isWalkable() const : bool
   + getMovementCost() const : int
   + setMovementCost(int movementCost) : void
-  + setRobot(Robot* robot) : void
-  + getRobot() const : Robot*
-  + removeRobot() : Robot*
-  + setFactory(Factory* factory) : void
+  + getOccupantType() const : OccupantType
+  + setOccupantType(OccupantType occupant) : void
+  + clearOccupant() : void
   + markSeen() : void
   + isSeen() const : bool
   + isTaken() const : bool
@@ -160,15 +170,23 @@ class World {
   + getWidth() const : int
   + getHeight() const : int
   + getCell(const Point& point) const : const Cell&
+  + getCell(const Point& point) : Cell&
   + addRobot(std::unique_ptr<Robot> robot) : void
+  + moveRobot(Robot& robot, int dx, int dy) : MoveResult
+  + moveRobotWithSpeed(Robot& robot, int dx, int dy) : bool
+  + killRobot(Robot& robot) : void
   + getRobots() const : const std::vector<std::unique_ptr<Robot>>&
+  + findRobotAt(const Point& point) const : Robot&
+  + hasRobotAt(const Point& point) const : bool
   + moveBots() : void
   + addFactory(std::unique_ptr<Factory> factory, const Point& point) : void
   + getFactories() const : const std::vector<std::unique_ptr<Factory>>&
   + addPlayer(std::unique_ptr<Player> player) : void
+  + getPlayer() : Player&
   + getPlayer() const : const Player&
   + movePlayer(int dx, int dy) : bool
   + isInside(const Point& point) const : bool
+  + getDistanceMap() : const std::vector<int>&
   + markSeen() : void
   + endTurn() : bool
 }
@@ -204,6 +222,9 @@ class Renderer {
   - buffer_ : std::string
   + Renderer()
   + render(const World& world) : std::string_view
+  + getTerrainSymbol(const Cell& cell, bool inRadius) const : char
+  + getRobotSymbol(const Robot& robot) const : char
+  + getFactorySymbol(bool inRadius) const : char
 }
 
 class Game {
@@ -220,8 +241,7 @@ Robot *-- Point : point_
 Robot --> Team : team_
 Player ..> Point : isInRadius()
 Cell --> TerrainType : terrainType_
-Cell --> Robot : robot_ (наблюдение)
-Cell --> Factory : factory_ (наблюдение)
+Cell --> OccupantType : occupant_
 Factory *-- Robot : spawningRobot_
 Factory *-- Point : point_
 Factory ..> Robot : spawn()
@@ -230,6 +250,7 @@ World *-- "0..*" Robot : robots_ / unique_ptr
 World *-- "0..*" Factory : factories_ / unique_ptr
 World *-- "0..1" Player : player_ / unique_ptr
 World *-- PathFinder : pathFinder_
+World ..> MoveResult : moveRobot()
 PathFinder --> World : world_ (const ссылка)
 PathFinder *-- Point : target_
 Game *-- Terminal : terminal_
