@@ -176,7 +176,7 @@ class World {
   + moveRobotWithSpeed(Robot& robot, int dx, int dy) : bool
   + killRobot(Robot& robot) : void
   + getRobots() const : const std::vector<std::unique_ptr<Robot>>&
-  + findRobotAt(const Point& point) const : Robot&
+  + findRobotAt(const Point& point) : Robot&
   + hasRobotAt(const Point& point) const : bool
   + moveBots() : void
   + addFactory(std::unique_ptr<Factory> factory, const Point& point) : void

@@ -167,7 +167,7 @@ MoveResult World::moveRobot(Robot& robot, int dx, int dy) {
         Robot& other = findRobotAt(nextPoint);
         bool isDead = robot.interact(other);
 
-        if (isDead) {
+        if (isDead && &other != player_.get()) {
             killRobot(other);
         }
 
@@ -236,7 +236,7 @@ const std::vector<std::unique_ptr<Robot>>& World::getRobots() const {
     return robots_;
 }
 
-Robot& World::findRobotAt(const Point& point) const {
+Robot& World::findRobotAt(const Point& point) {
     if (getPlayer().getPosition() == point) {
         return *player_;
     }
@@ -250,12 +250,8 @@ Robot& World::findRobotAt(const Point& point) const {
 }
 
 bool World::hasRobotAt(const Point& point) const {
-    try {
-        findRobotAt(point);
-        return true;
-    } catch (const std::exception& e) {
-        return false;
-    }
+    return isInside(point) &&
+           getCell(point).getOccupantType() == OccupantType::Robot;
 }
 
 void World::moveBots() {

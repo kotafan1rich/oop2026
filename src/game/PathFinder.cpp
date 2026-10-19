@@ -59,7 +59,7 @@ void PathFinder::buildDistanceMap(const Point& target, const Point& start) {
             const int nextIndex = nextPoint.getY() * width + nextPoint.getX();
             const Cell& cell = world_.getCell(nextPoint);
             const bool occupiedByRobot =
-                cell.getOccupantType() != OccupantType::Empty;
+                cell.getOccupantType() == OccupantType::Robot;
             if (!cell.isWalkable() || (occupiedByRobot && nextPoint != target &&
                                        nextPoint != start)) {
                 continue;
