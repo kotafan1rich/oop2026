@@ -38,9 +38,6 @@ void Renderer::drawField(const World& world, const int rowLength) {
 }
 
 void Renderer::drawFactory(const World& world, const int rowLength) {
-    RenderIcons icons = getIcons();
-    const Player& player = world.getPlayer();
-
     for (const auto& factory : world.getFactories()) {
         if (factory == nullptr) {
             continue;
