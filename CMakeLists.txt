@@ -9,17 +9,17 @@ add_executable(game
     src/main.cpp
 
     src/game/Game.cpp
-    src/game/World.cpp
-    src/game/Cell.cpp
-    src/game/Robot.cpp
-    src/game/Player.cpp
-    src/game/Point.cpp
-    src/game/Renderer.cpp
-    src/game/PathFinder.cpp
-    src/game/Factory.cpp
+    src/game/navigation/PathFinder.cpp
+    src/game/units/Player.cpp
+    src/game/units/Robot.cpp
+    src/game/world/Cell.cpp
+    src/game/world/Factory.cpp
+    src/game/world/Point.cpp
+    src/game/world/World.cpp
 
-    src/terminal/Terminal.cpp
     src/terminal/Input.cpp
+    src/terminal/Renderer.cpp
+    src/terminal/Terminal.cpp
 )
 
 target_include_directories(game PRIVATE include)
