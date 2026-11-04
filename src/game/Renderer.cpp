@@ -53,8 +53,7 @@ void Renderer::drawFactory(const World& world, const int rowLength) {
                 const Cell& cell = world.getCell(point);
 
                 if (cell.isSeen()) {
-                    setSymbol(point, rowLength,
-                              getFactorySymbol(player.isInRadius(point)));
+                    setSymbol(point, rowLength, getFactorySymbol());
                 }
             }
         }
@@ -115,10 +114,11 @@ char Renderer::getTerrainSymbol(const Cell& cell, bool inRadius) const {
 
     TerrainType terrainType = cell.getTerrainType();
     if (terrainType == TerrainType::Floor) {
-        return icons.floor;
-    }
-    if (!inRadius) {
-        return icons.unknown;
+        if (inRadius) {
+            return icons.floor;
+        } else {
+            return icons.unknown;
+        }
     }
 
     switch (terrainType) {
@@ -144,11 +144,7 @@ char Renderer::getRobotSymbol(const Robot& robot) const {
     return icons.enemy;
 }
 
-char Renderer::getFactorySymbol(bool inRadius) const {
+char Renderer::getFactorySymbol() const {
     RenderIcons icons = getIcons();
-    if (inRadius) {
-        return icons.factory;
-    } else {
-        return icons.unknown;
-    }
+    return icons.factory;
 }

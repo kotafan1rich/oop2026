@@ -37,5 +37,5 @@ class Renderer {
 
     char getTerrainSymbol(const Cell& cell, bool inRadius) const;
     char getRobotSymbol(const Robot& robot) const;
-    char getFactorySymbol(bool inRadius) const;
+    char getFactorySymbol() const;
 };
