@@ -1,7 +1,6 @@
-#include "game/Renderer.hpp"
+#include "terminal/Renderer.hpp"
 
 #include <string>
-#include <vector>
 
 Renderer::Renderer() {}
 

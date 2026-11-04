@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cstddef>
-
-#include "Point.hpp"
+#include "game/world/Point.hpp"
 
 constexpr int maxHealth = 100;
 constexpr int defaultAttack = 10;

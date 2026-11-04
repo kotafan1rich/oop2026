@@ -3,11 +3,11 @@
 #include <functional>
 #include <vector>
 
-#include "game/Cell.hpp"
-#include "game/Factory.hpp"
-#include "game/PathFinder.hpp"
-#include "game/Player.hpp"
-#include "game/Robot.hpp"
+#include "game/navigation/PathFinder.hpp"
+#include "game/units/Player.hpp"
+#include "game/units/Robot.hpp"
+#include "game/world/Cell.hpp"
+#include "game/world/Factory.hpp"
 
 constexpr int maxHeight = 100;
 constexpr int maxWidth = 100;

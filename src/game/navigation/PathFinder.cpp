@@ -1,4 +1,4 @@
-#include "game/PathFinder.hpp"
+#include "game/navigation/PathFinder.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -6,7 +6,7 @@
 #include <queue>
 #include <utility>
 
-#include "game/World.hpp"
+#include "game/world/World.hpp"
 
 PathFinder::PathFinder(const World& world) : world_(world) {}
 

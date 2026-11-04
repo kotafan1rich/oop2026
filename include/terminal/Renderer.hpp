@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "game/World.hpp"
+#include "game/world/World.hpp"
 
 struct RenderIcons {
     char floor = ' ';

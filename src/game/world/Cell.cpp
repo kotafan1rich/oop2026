@@ -1,6 +1,4 @@
-#include "game/Cell.hpp"
-
-#include "game/Point.hpp"
+#include "game/world/Cell.hpp"
 
 Cell::Cell(int movementCost) : movementCost_(movementCost) {}
 

@@ -1,7 +1,8 @@
 #pragma once
+
 #include <memory>
 
-#include "game/Robot.hpp"
+#include "game/units/Robot.hpp"
 
 constexpr int defaultSpawnInterval = 10;
 

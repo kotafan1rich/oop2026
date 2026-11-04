@@ -1,6 +1,6 @@
-#include "game/Factory.hpp"
+#include "game/world/Factory.hpp"
 
-#include "game/Robot.hpp"
+#include "game/units/Robot.hpp"
 
 Factory::Factory(Robot spawningRobot, int height, int width)
     : spawningRobot_(spawningRobot), height_(height), width_(width) {}

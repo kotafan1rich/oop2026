@@ -1,9 +1,5 @@
 #pragma once
 
-#include "Factory.hpp"
-#include "Point.hpp"
-#include "Robot.hpp"
-
 constexpr int defaultMovementCost = 1;
 constexpr int swampMovementCost = 2;
 constexpr int impassableMovementCost = 0;

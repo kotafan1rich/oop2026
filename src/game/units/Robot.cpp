@@ -1,9 +1,9 @@
-#include "game/Robot.hpp"
+#include "game/units/Robot.hpp"
 
 #include <algorithm>
 #include <string>
 
-#include "game/Point.hpp"
+#include "game/world/Point.hpp"
 
 Robot::Robot(int speed) { setSpeed(speed); }
 

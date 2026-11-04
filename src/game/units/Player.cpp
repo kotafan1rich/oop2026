@@ -1,8 +1,6 @@
-#include "game/Player.hpp"
+#include "game/units/Player.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <string>
 
 Player::Player() : Robot(defaultPlayerSpeed) {
     setTeam(Team::Friend);

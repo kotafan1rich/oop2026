@@ -1,9 +1,9 @@
 #include "game/Game.hpp"
 
-#include "game/Factory.hpp"
-#include "game/Player.hpp"
-#include "game/Robot.hpp"
-#include "game/World.hpp"
+#include "game/units/Player.hpp"
+#include "game/units/Robot.hpp"
+#include "game/world/Factory.hpp"
+#include "game/world/World.hpp"
 
 Game::Game(int height, int width)
     : terminal_(), renderer_(), input_(terminal_), world_(height, width) {
@@ -48,7 +48,6 @@ Game::Game(int height, int width)
     factory->setSpawnInterval(10);
 
     world_.addFactory(std::move(factory), Point(27, 27));
-
 }
 
 Game::~Game() {}

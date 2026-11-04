@@ -1,12 +1,12 @@
-#include "game/World.hpp"
+#include "game/world/World.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <exception>
 #include <queue>
 
-#include "game/Cell.hpp"
-#include "game/PathFinder.hpp"
+#include "game/navigation/PathFinder.hpp"
+#include "game/world/Cell.hpp"
 
 void World::initDefaultLevel() {
     if (width_ >= 12 && height_ >= 12) {
