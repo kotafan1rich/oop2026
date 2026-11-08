@@ -16,6 +16,13 @@ constexpr int defaultRobotHeal = 10;
 
 enum class Team { Friend, Enemy };
 
+enum class InteractResult {
+    NotInteracted,
+    HealSelf,
+    Kill,
+    Damaged,
+};
+
 class Robot {
    private:
     Point point_ = Point(0, 0);
@@ -59,19 +66,20 @@ class Robot {
     void expendEnergy(int value);
     void restoreEnergy(int value);
 
-    virtual bool gainExp(int value);
+    virtual int gainExp(int value);
 
     void addAbility(std::unique_ptr<Ability> ability);
     const std::vector<std::unique_ptr<Ability>>& getAllAbilities() const;
     std::vector<AbilityType> getAllAbilityTypes() const;
     std::optional<std::reference_wrapper<Ability>> getAbility(
         AbilityType abilityType) const;
+    bool upgradeAbility(AbilityType abilityType);
 
     bool attack(Robot& other);
     bool attack(Robot& other, int damage);
     bool takeDamage(int amount);
     void heal(int amount);
-    virtual bool interact(Robot& other);
+    virtual InteractResult interact(Robot& other);
 
     int getHealCount() const;
     void setHealCount(int newHeal);

@@ -80,7 +80,7 @@ void Robot::restoreEnergy(int value) {
     }
 }
 
-bool Robot::gainExp(int value) { return false; }
+int Robot::gainExp(int value) { return 0; }
 
 void Robot::addAbility(std::unique_ptr<Ability> ability) {
     for (auto& a : abilities_) {
@@ -113,6 +113,15 @@ std::optional<std::reference_wrapper<Ability>> Robot::getAbility(
     return std::nullopt;
 }
 
+bool Robot::upgradeAbility(AbilityType abilityType) {
+    auto abilityOpt = getAbility(abilityType);
+    if (abilityOpt) {
+        abilityOpt->get().upgrade();
+        return true;
+    }
+    return false;
+}
+
 int Robot::getX() const { return point_.getX(); }
 
 int Robot::getY() const { return point_.getY(); }
@@ -139,7 +148,8 @@ bool Robot::attack(Robot& other, int damage) {
         return false;
     }
 
-    return other.takeDamage(damage);
+    other.takeDamage(damage);
+    return other.isDead();
 }
 
 bool Robot::takeDamage(int amount) {
@@ -158,11 +168,15 @@ void Robot::heal(int amount) {
     }
 }
 
-bool Robot::interact(Robot& other) {
+InteractResult Robot::interact(Robot& other) {
     if (getTeam() != other.getTeam()) {
-        return attack(other);
+        bool killed = attack(other);
+        if (killed) {
+            return InteractResult::Kill;
+        }
+        return InteractResult::Damaged;
     }
-    return false;
+    return InteractResult::NotInteracted;
 }
 
 int Robot::getHealCount() const { return healCount_; }

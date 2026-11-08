@@ -28,11 +28,7 @@ bool RangedAttach::use(Robot& owner, World& world,
         return false;
     }
 
-    bool isDead = owner.attack(robot, damage_);
-    if (isDead && &robot != &world.getPlayer()) {
-        world.killRobot(robot);
-        owner.gainExp(20);
-    }
+    world.attackRobots(owner, robot, damage_);
 
     owner.expendEnergy(cost_);
 

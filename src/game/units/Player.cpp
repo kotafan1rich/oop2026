@@ -35,13 +35,13 @@ bool Player::isInRadius(const Point& target) const {
     return getPosition().dist(target) <= getVisibiltyRadius();
 }
 
-bool Player::gainExp(int value) {
+int Player::gainExp(int value) {
     if (value <= 0) {
-        return false;
+        return 0;
     }
 
     experience_ += value;
-
+    int levelBefore = level_;
     while (experience_ >= expToNextLevel()) {
         experience_ -= expToNextLevel();
         level_++;
@@ -49,24 +49,19 @@ bool Player::gainExp(int value) {
         setMaxHealth(getMaxHealth() + 10);
         setAttack(getAttack() + 5);
         setMaxEnergy(getMaxEnergy() + 5);
-        return true;
     }
-    return false;
+    return level_ - levelBefore;
 }
 
 int Player::expToNextLevel() const { return getLevel() * 100; }
 
-bool Player::interact(Robot& other) {
+InteractResult Player::interact(Robot& other) {
     if (other.getTeam() == Team::Friend) {
         heal(other.getHealCount());
-        return false;
+        return InteractResult::HealSelf;
     }
 
-    bool interacted = Robot::interact(other);
-    if (other.isDead()) {
-        gainExp(30);
-    }
-    return interacted;
+    return Robot::interact(other);
 }
 
 void Player::onTurnEnd() {

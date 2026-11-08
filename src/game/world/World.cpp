@@ -6,6 +6,7 @@
 #include <queue>
 
 #include "game/navigation/PathFinder.hpp"
+#include "game/units/Robot.hpp"
 #include "game/world/Cell.hpp"
 
 void World::initDefaultLevel() {
@@ -150,6 +151,17 @@ bool World::useAbility(Robot& owner, AbilityType abilityType,
     return false;
 }
 
+std::optional<GameEvent> World::popEvent() {
+    if (events_.empty()) {
+        return std::nullopt;
+    }
+    GameEvent event = events_.back();
+    events_.pop();
+    return event;
+}
+
+void World::pushEvent(GameEvent event) { events_.push(event); }
+
 void World::addRobot(std::unique_ptr<Robot> robot) {
     if (!robot) {
         return;
@@ -159,6 +171,36 @@ void World::addRobot(std::unique_ptr<Robot> robot) {
         cell.setOccupantType(OccupantType::Robot);
         robots_.push_back(std::move(robot));
     }
+}
+
+bool World::attackRobots(Robot& owner, Robot& target) {
+    return attackRobots(owner, target, owner.getAttack());
+}
+
+bool World::attackRobots(Robot& owner, Robot& target, int damage) {
+    bool killed = owner.attack(target, damage);
+    if (killed) {
+        killRobot(target);
+        grantExp(owner, 50);
+    }
+    return killed;
+}
+
+InteractResult World::interactRobots(Robot& owner, Robot& target) {
+    InteractResult result = owner.interact(target);
+
+    switch (result) {
+        case InteractResult::Kill: {
+            killRobot(target);
+            grantExp(owner, 50);
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return result;
 }
 
 MoveResult World::moveRobot(Robot& robot, int dx, int dy) {
@@ -178,12 +220,11 @@ MoveResult World::moveRobot(Robot& robot, int dx, int dy) {
         auto other = findRobotAt(nextPoint);
         if (other) {
             Robot& target = other->get();
-            bool isDead = robot.interact(target);
 
-            if (isDead && &target != player_.get()) {
-                killRobot(target);
+            InteractResult result = interactRobots(robot, target);
+            if (result == InteractResult::NotInteracted) {
+                return MoveResult::Blocked;
             }
-
             return MoveResult::Interacted;
         }
     }
@@ -239,6 +280,9 @@ bool World::moveRobotUsingSpeed(
 }
 
 void World::killRobot(Robot& robot) {
+    if (&robot == player_.get()) {
+        return;
+    }
     getCell(robot.getPosition()).clearOccupant();
 
     std::erase_if(robots_, [&robot](const std::unique_ptr<Robot>& pointer) {
@@ -410,6 +454,15 @@ void World::markSeen() {
                 }
             }
         }
+    }
+}
+
+void World::grantExp(Robot& owner, int amount) {
+    int upLevels = owner.gainExp(amount);
+    GameEvent event;
+    event.eventType = EvnetType::LevelUp;
+    for (int i = 0; i < upLevels; i++) {
+        pushEvent(event);
     }
 }
 

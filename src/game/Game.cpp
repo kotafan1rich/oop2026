@@ -83,29 +83,35 @@ void Game::Run() {
 }
 
 bool Game::processCommand(const Command& command) {
+    bool processed = false;
     switch (command) {
         case Command::Up:
-            return world_.movePlayer(0, -1);
+            processed = world_.movePlayer(0, -1);
+            break;
 
         case Command::Right:
-            return world_.movePlayer(1, 0);
+            processed = world_.movePlayer(1, 0);
+            break;
 
         case Command::Down:
-            return world_.movePlayer(0, 1);
+            processed = world_.movePlayer(0, 1);
+            break;
 
         case Command::Left:
-            return world_.movePlayer(-1, 0);
+            processed = world_.movePlayer(-1, 0);
+            break;
 
         case Command::Wait:
-            return true;
+            processed = true;
+            break;
 
         case Command::Use:
             useAbility();
-            return false;
-
-        default:
-            return false;
+            processed = false;
+            break;
     }
+    handleGameEvents();
+    return processed;
 }
 
 bool Game::useAbility() {
@@ -180,8 +186,34 @@ std::optional<Point> Game::choosePointInRadius(int radius) {
     return point;
 }
 
+void Game::handleGameEvents() {
+    std::optional<GameEvent> event = world_.popEvent();
+    while (event) {
+        switch (event->eventType) {
+            case EvnetType::LevelUp:
+                chooseAbility();
+                break;
+
+            default:
+                break;
+        }
+        event = world_.popEvent();
+    }
+}
+
 void Game::chooseAbility() {
+    Player& player = world_.getPlayer();
     AbilityType abilityType = abilityMenu_.choose();
+
+    auto ability = player.getAbility(abilityType);
+    if (ability) {
+        player.upgradeAbility(abilityType);
+    } else {
+        addAbility(abilityType);
+    }
+}
+
+void Game::addAbility(AbilityType abilityType) {
     world_.getPlayer().addAbility(createAbility(abilityType));
 }
 

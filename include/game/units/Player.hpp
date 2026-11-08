@@ -22,14 +22,14 @@ class Player : public Robot {
     int getExperience() const;
     void setLevel(int level);
     int getLevel() const;
-    bool gainExp(int value) override;
+    int gainExp(int value) override;
     int expToNextLevel() const;
 
     void setVisibiltyRadius(int radius);
     int getVisibiltyRadius() const;
     bool isInRadius(const Point& target) const;
 
-    bool interact(Robot& other) override;
+    InteractResult interact(Robot& other) override;
 
     void onTurnEnd();
 };

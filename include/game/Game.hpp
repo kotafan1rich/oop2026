@@ -26,8 +26,13 @@ class Game {
 
     void Run();
     bool processCommand(const Command& command);
+
     bool useAbility();
-    std::optional<Point> choosePointInRadius(int radius);
     void chooseAbility();
+    void addAbility(AbilityType abilityType);
     std::unique_ptr<Ability> createAbility(AbilityType abilityType) const;
+
+    std::optional<Point> choosePointInRadius(int radius);
+
+    void handleGameEvents();
 };

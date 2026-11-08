@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <optional>
+#include <queue>
 #include <vector>
 
 #include "game/navigation/PathFinder.hpp"
@@ -21,17 +22,33 @@ enum class MoveResult {
     Interacted,
 };
 
+enum class EvnetType {
+    LevelUp,
+    Damage,
+    Heal,
+};
+
+struct GameEvent {
+    EvnetType eventType;
+    std::optional<Point> point;
+};
+
 class World {
    private:
     int height_;
     int width_;
+
+    std::queue<GameEvent> events_;
+
     std::vector<std::vector<Cell>> field_;
     std::vector<std::unique_ptr<Robot>> robots_;
     std::vector<std::unique_ptr<Factory>> factories_;
     std::unique_ptr<Player> player_;
+
     PathFinder pathFinder_;
 
     void initDefaultLevel();
+
     bool moveRobotUsingSpeed(
         Robot& robot,
         const std::function<Point(const Robot&)>& selectNextPoint);
@@ -49,7 +66,13 @@ class World {
     bool useAbility(Robot& owner, AbilityType ability,
                     std::optional<Point> target);
 
+    std::optional<GameEvent> popEvent();
+    void pushEvent(GameEvent event);
+
     void addRobot(std::unique_ptr<Robot> robot);
+    bool attackRobots(Robot& owner, Robot& target);
+    bool attackRobots(Robot& owner, Robot& target, int damage);
+    InteractResult interactRobots(Robot& owner, Robot& target);
     MoveResult moveRobot(Robot& robot, int dx, int dy);
     bool moveRobotWithSpeed(Robot& robot, int dx, int dy);
     void killRobot(Robot& robot);
@@ -74,6 +97,8 @@ class World {
     const std::vector<int>& getDistanceMap();
 
     void markSeen();
+
+    void grantExp(Robot& owner, int amount);
 
     bool endTurn();
 };

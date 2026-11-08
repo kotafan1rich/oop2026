@@ -11,30 +11,23 @@ bool Splash::use(Robot& owner, World& world, std::optional<Point> target) {
         return false;
     }
 
-    std::vector<std::reference_wrapper<Robot>> killed;
-    for (std::unique_ptr<Robot>& robot : world.getRobots()) {
-        if (&owner == robot.get()) {
-            continue;
-        }
+    std::vector<std::reference_wrapper<Robot>> targets;
 
-        if (owner.getPosition().dist(robot->getPosition()) <= range_ &&
-            owner.getTeam() != robot->getTeam()) {
-            bool isDead = owner.attack(*robot);
-            if (isDead) {
-                owner.gainExp(20);
-                killed.push_back(std::ref(*robot));
-            }
+    for (const auto& robot : world.getRobots()) {
+        if (robot.get() != &owner && owner.getTeam() != robot->getTeam() &&
+            owner.getPosition().dist(robot->getPosition()) <= range_) {
+            targets.push_back(std::ref(*robot));
         }
+    }
+
+    for (Robot& robot : targets) {
+        world.attackRobots(owner, robot);
     }
 
     Player& player = world.getPlayer();
     if (owner.getTeam() != player.getTeam() &&
         owner.getPosition().dist(player.getPosition()) <= range_) {
-        owner.attack(player);
-    }
-
-    for (auto& robot : killed) {
-        world.killRobot(robot);
+        world.attackRobots(owner, player);
     }
 
     owner.expendEnergy(cost_);
