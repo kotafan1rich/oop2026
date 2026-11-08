@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <vector>
 
 #include "game/navigation/PathFinder.hpp"
@@ -45,12 +46,17 @@ class World {
     const Cell& getCell(const Point& point) const;
     Cell& getCell(const Point& point);
 
+    bool useAbility(Robot& owner, AbilityType ability,
+                    std::optional<Point> target);
+
     void addRobot(std::unique_ptr<Robot> robot);
     MoveResult moveRobot(Robot& robot, int dx, int dy);
     bool moveRobotWithSpeed(Robot& robot, int dx, int dy);
     void killRobot(Robot& robot);
     const std::vector<std::unique_ptr<Robot>>& getRobots() const;
-    Robot& findRobotAt(const Point& point);
+    std::vector<std::unique_ptr<Robot>>& getRobots();
+    std::optional<std::reference_wrapper<Robot>> findRobotAt(
+        const Point& point);
     bool hasRobotAt(const Point& point) const;
 
     void moveBots();

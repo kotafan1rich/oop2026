@@ -9,6 +9,10 @@ add_executable(game
     src/main.cpp
 
     src/game/Game.cpp
+    src/game/abilities/Heal.cpp
+    src/game/abilities/RangedAttach.cpp
+    src/game/abilities/Splash.cpp
+    src/game/abilities/Teleport.cpp
     src/game/navigation/PathFinder.cpp
     src/game/units/Player.cpp
     src/game/units/Robot.cpp
@@ -16,6 +20,7 @@ add_executable(game
     src/game/world/Factory.cpp
     src/game/world/Point.cpp
     src/game/world/World.cpp
+    src/game/menu/AbilityMenu.cpp
 
     src/terminal/Input.cpp
     src/terminal/Renderer.cpp

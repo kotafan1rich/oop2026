@@ -19,6 +19,7 @@ class PathFinder {
     void buildDistanceMap(const Point& target);
     void buildDistanceMap(const Point& target, const Point& start);
     Point getNextPoint(const Point& from) const;
+    Point getNextPointInRadius(const Point& from, int radius) const;
 
     const std::vector<int>& getDistanceMap();
 };

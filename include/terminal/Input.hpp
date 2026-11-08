@@ -9,6 +9,17 @@ enum class Command {
     Left,
     Wait,
     Quit,
+    Use,
+    Enter,
+    None,
+};
+
+enum class Choice {
+    One,
+    Two,
+    Three,
+    Four,
+    Quit,
     None,
 };
 
@@ -21,4 +32,5 @@ class Input {
     ~Input();
 
     Command getCommand() const;
+    Choice getChoice() const;
 };

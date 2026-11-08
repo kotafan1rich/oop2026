@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include "game/world/World.hpp"
 
 struct RenderIcons {
@@ -13,13 +11,29 @@ struct RenderIcons {
     char friendly = 'H';
     char factory = '+';
     char deadRobot = '%';
-    char unknown = '?';
+    char unknown = '*';
+};
+
+enum class Color {
+    Default,
+    Red,
+    Green,
+    Yellow,
+    Blue,
+};
+
+struct RenderCell {
+    char symbol = ' ';
+    Color foreground = Color::Default;
+    Color background = Color::Default;
+
+    std::string withColor() const;
 };
 
 class Renderer {
    private:
     RenderIcons icons_;
-    std::string buffer_;
+    std::vector<RenderCell> cells_;
 
    public:
     Renderer();
@@ -27,13 +41,20 @@ class Renderer {
 
     const RenderIcons& getIcons() const;
 
-    std::string_view render(const World& world);
+    std::string renderWorld(const World& world);
+
+    void highlightCircle(const World& world, Point center, int radius);
+    void highlightPoint(const World& world, Point point);
+
+    void drawWorld(const World& world);
     void drawField(const World& world, const int rowLength);
     void drawFactory(const World& world, const int rowLength);
     void drawRobots(const World& world, const int rowLength);
     void drawPlayer(const World& world, const int rowLength);
-    void drawInterface(const World& world);
-    void setSymbol(const Point& point, const int rowLength, char symbol);
+
+    std::string getInterface(const World& world);
+
+    void setCell(const Point& point, const int rowLength, RenderCell cell);
 
     char getTerrainSymbol(const Cell& cell, bool inRadius) const;
     char getRobotSymbol(const Robot& robot) const;

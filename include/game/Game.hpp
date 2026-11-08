@@ -1,10 +1,12 @@
 #pragma once
 
+#include <optional>
+
+#include "game/menu/AbilityMenu.hpp"
 #include "game/world/World.hpp"
+#include "terminal/Input.hpp"
 #include "terminal/Renderer.hpp"
 #include "terminal/Terminal.hpp"
-
-#include "terminal/Input.hpp"
 
 class Game {
    private:
@@ -12,6 +14,8 @@ class Game {
     Renderer renderer_;
     Input input_;
     World world_;
+
+    AbilityMenu abilityMenu_;
 
    public:
     Game(int height, int width);
@@ -22,4 +26,8 @@ class Game {
 
     void Run();
     bool processCommand(const Command& command);
+    bool useAbility();
+    std::optional<Point> choosePointInRadius(int radius);
+    void chooseAbility();
+    std::unique_ptr<Ability> createAbility(AbilityType abilityType) const;
 };

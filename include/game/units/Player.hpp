@@ -22,7 +22,7 @@ class Player : public Robot {
     int getExperience() const;
     void setLevel(int level);
     int getLevel() const;
-    void gainExp(int value);
+    bool gainExp(int value) override;
     int expToNextLevel() const;
 
     void setVisibiltyRadius(int radius);

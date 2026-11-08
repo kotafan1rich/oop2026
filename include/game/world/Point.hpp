@@ -1,12 +1,11 @@
 #pragma once
 
-class Point
-{
-  private:
+class Point {
+   private:
     int x_;
     int y_;
 
-  public:
+   public:
     Point(int x, int y);
     ~Point();
 
@@ -15,8 +14,8 @@ class Point
     int getX() const;
     int getY() const;
     void setPoint(int x, int y);
+    double dist(const Point& target) const;
 
     bool operator==(const Point& other) const;
     bool operator!=(const Point& other) const;
 };
-

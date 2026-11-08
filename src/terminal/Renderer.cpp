@@ -8,31 +8,80 @@ Renderer::~Renderer() {}
 
 const RenderIcons& Renderer::getIcons() const { return icons_; }
 
-std::string_view Renderer::render(const World& world) {
-    const int rowLength = world.getWidth() + 1;
+std::string Renderer::renderWorld(const World& world) {
+    const int width = world.getWidth();
+    const int height = world.getHeight();
+
+    const int rowLength = width;
+
+    std::string buffer = "";
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            buffer += cells_[y * rowLength + x].withColor();
+        }
+        buffer += "\n";
+    }
+
+    std::string interafce = getInterface(world);
+    buffer += "\n";
+    buffer += interafce;
+
+    return buffer;
+}
+
+void Renderer::drawWorld(const World& world) {
+    const int rowLength = world.getWidth();
     drawField(world, rowLength);
     drawFactory(world, rowLength);
     drawRobots(world, rowLength);
     drawPlayer(world, rowLength);
-    drawInterface(world);
+}
 
-    return buffer_;
+void Renderer::highlightCircle(const World& world, Point center, int radius) {
+    const int width = world.getWidth();
+    const int height = world.getHeight();
+
+    auto insideRadius = [&](int x, int y) {
+        int dx = x - center.getX();
+        int dy = y - center.getY();
+        return dx * dx + dy * dy <= radius * radius;
+    };
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            bool isEdge = insideRadius(x, y) &&
+                          (!insideRadius(x - 1, y) || !insideRadius(x + 1, y) ||
+                           !insideRadius(x, y - 1) || !insideRadius(x, y + 1));
+
+            if (isEdge) {
+                cells_[y * width + x].background = Color::Red;
+            }
+        }
+    }
+}
+
+void Renderer::highlightPoint(const World& world, Point point) {
+    if (world.isInside(point)) {
+        cells_[point.getY() * (world.getWidth()) + point.getX()].background =
+            Color::Blue;
+    }
 }
 
 void Renderer::drawField(const World& world, const int rowLength) {
     const int width = world.getWidth();
     const int height = world.getHeight();
-    buffer_.resize(height * rowLength);
+    cells_.resize(height * rowLength);
 
     const Player& player = world.getPlayer();
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             Point point(x, y);
             const Cell& cell = world.getCell(point);
-            setSymbol(point, rowLength,
-                      getTerrainSymbol(cell, player.isInRadius(point)));
+            RenderCell renderCell;
+            renderCell.symbol =
+                getTerrainSymbol(cell, player.isInRadius(point));
+            setCell(point, rowLength, renderCell);
         }
-        setSymbol(Point(width, y), rowLength, '\n');
     }
 }
 
@@ -49,7 +98,9 @@ void Renderer::drawFactory(const World& world, const int rowLength) {
                 const Cell& cell = world.getCell(point);
 
                 if (cell.isSeen()) {
-                    setSymbol(point, rowLength, getFactorySymbol());
+                    RenderCell renderCell;
+                    renderCell.symbol = getFactorySymbol();
+                    setCell(point, rowLength, renderCell);
                 }
             }
         }
@@ -63,7 +114,12 @@ void Renderer::drawRobots(const World& world, const int rowLength) {
             continue;
         }
         if (player.isInRadius(robot->getPosition())) {
-            setSymbol(robot->getPosition(), rowLength, getRobotSymbol(*robot));
+            RenderCell renderCell;
+            renderCell.symbol = getRobotSymbol(*robot);
+            renderCell.foreground = robot->getTeam() != player.getTeam()
+                                        ? Color::Red
+                                        : Color::Green;
+            setCell(robot->getPosition(), rowLength, renderCell);
         }
     }
 }
@@ -71,33 +127,40 @@ void Renderer::drawRobots(const World& world, const int rowLength) {
 void Renderer::drawPlayer(const World& world, const int rowLength) {
     RenderIcons icons = getIcons();
     const Player& player = world.getPlayer();
-    char symb = icons.player;
+
+    RenderCell renderCell;
+    renderCell.symbol = icons.player;
+    renderCell.foreground = Color::Green;
+
     if (player.isDead()) {
-        symb = icons.deadRobot;
+        renderCell.symbol = icons.deadRobot;
     }
-    setSymbol(player.getPosition(), rowLength, symb);
+    setCell(player.getPosition(), rowLength, renderCell);
 }
 
-void Renderer::drawInterface(const World& world) {
+std::string Renderer::getInterface(const World& world) {
     const Player& player = world.getPlayer();
 
-    buffer_ += "\nHealth: " + std::to_string(player.getHealth()) + "/" +
-               std::to_string(player.getMaxHealth());
+    std::string buffer = "\nHealth: " + std::to_string(player.getHealth()) +
+                         "/" + std::to_string(player.getMaxHealth());
 
-    buffer_ += "  Energy: " + std::to_string(player.getEnergy()) + "/" +
-               std::to_string(player.getMaxEnergy()) + "\n";
+    buffer += "  Energy: " + std::to_string(player.getEnergy()) + "/" +
+              std::to_string(player.getMaxEnergy()) + "\n";
 
-    buffer_ += "LEVEL " + std::to_string(player.getLevel()) + " - " +
-               std::to_string(player.getExperience()) + "/" +
-               std::to_string(player.expToNextLevel()) + '\n';
+    buffer += "LEVEL " + std::to_string(player.getLevel()) + " - " +
+              std::to_string(player.getExperience()) + "/" +
+              std::to_string(player.expToNextLevel()) + '\n';
 
-    buffer_ += "WASD: move  R/Space: rest  Q: quit\n";
+    buffer += "WASD: move  R/Space: rest  Q: quit  E: use ability\n";
+
+    return buffer;
 }
 
-void Renderer::setSymbol(const Point& point, const int rowLength, char symbol) {
+void Renderer::setCell(const Point& point, const int rowLength,
+                       RenderCell cell) {
     int index = point.getY() * rowLength + point.getX();
-    if (index >= 0 && index < buffer_.length()) {
-        buffer_[index] = symbol;
+    if (index >= 0 && index < cells_.size()) {
+        cells_[index] = cell;
     }
 }
 
@@ -143,4 +206,50 @@ char Renderer::getRobotSymbol(const Robot& robot) const {
 char Renderer::getFactorySymbol() const {
     RenderIcons icons = getIcons();
     return icons.factory;
+}
+
+std::string RenderCell::withColor() const {
+    std::string result;
+
+    switch (foreground) {
+        case Color::Red:
+            result += "\033[31m";
+            break;
+        case Color::Green:
+            result += "\033[32m";
+            break;
+        case Color::Yellow:
+            result += "\033[33m";
+            break;
+        case Color::Blue:
+            result += "\033[34m";
+            break;
+        case Color::Default:
+            break;
+    }
+
+    switch (background) {
+        case Color::Red:
+            result += "\033[41m";
+            break;
+        case Color::Green:
+            result += "\033[42m";
+            break;
+        case Color::Yellow:
+            result += "\033[43m";
+            break;
+        case Color::Blue:
+            result += "\033[44m";
+            break;
+        case Color::Default:
+            break;
+    }
+
+    result += symbol;
+
+    if (foreground != Color::Default || background != Color::Default) {
+        result += "\033[0m";
+    }
+
+    return result;
 }

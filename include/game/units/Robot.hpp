@@ -1,5 +1,9 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
+#include "game/abilities/Ability.hpp"
 #include "game/world/Point.hpp"
 
 constexpr int maxHealth = 100;
@@ -23,6 +27,7 @@ class Robot {
     int energy_ = defaultEnergy;
     int maxEnergy_ = defaultMaxEnergy;
     int healCount_ = defaultRobotHeal;
+    std::vector<std::unique_ptr<Ability>> abilities_;
 
    public:
     explicit Robot(int speed = defaultSpeed);
@@ -54,6 +59,15 @@ class Robot {
     void expendEnergy(int value);
     void restoreEnergy(int value);
 
+    virtual bool gainExp(int value);
+
+    void addAbility(std::unique_ptr<Ability> ability);
+    const std::vector<std::unique_ptr<Ability>>& getAllAbilities() const;
+    std::vector<AbilityType> getAllAbilityTypes() const;
+    std::optional<std::reference_wrapper<Ability>> getAbility(
+        AbilityType abilityType) const;
+
+    bool attack(Robot& other);
     bool takeDamage(int amount);
     void heal(int amount);
     virtual bool interact(Robot& other);

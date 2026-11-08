@@ -80,6 +80,39 @@ void Robot::restoreEnergy(int value) {
     }
 }
 
+bool Robot::gainExp(int value) { return false; }
+
+void Robot::addAbility(std::unique_ptr<Ability> ability) {
+    for (auto& a : abilities_) {
+        if (ability->getType() == a->getType()) {
+            return;
+        }
+    }
+    abilities_.push_back(std::move(ability));
+}
+
+const std::vector<std::unique_ptr<Ability>>& Robot::getAllAbilities() const {
+    return abilities_;
+}
+
+std::vector<AbilityType> Robot::getAllAbilityTypes() const {
+    std::vector<AbilityType> result;
+    for (auto& ability : abilities_) {
+        result.push_back(ability->getType());
+    }
+    return result;
+}
+
+std::optional<std::reference_wrapper<Ability>> Robot::getAbility(
+    AbilityType abilityType) const {
+    for (auto& ability : abilities_) {
+        if (ability->getType() == abilityType) {
+            return *ability;
+        }
+    }
+    return std::nullopt;
+}
+
 int Robot::getX() const { return point_.getX(); }
 
 int Robot::getY() const { return point_.getY(); }
@@ -99,6 +132,8 @@ void Robot::onTurnEnd() {
     }
 }
 
+bool Robot::attack(Robot& other) { return other.takeDamage(getAttack()); }
+
 bool Robot::takeDamage(int amount) {
     if (amount > 0) {
         setHealth(health_ - amount);
@@ -117,7 +152,7 @@ void Robot::heal(int amount) {
 
 bool Robot::interact(Robot& other) {
     if (getTeam() != other.getTeam()) {
-        return other.takeDamage(getAttack());
+        return attack(other);
     }
     return false;
 }

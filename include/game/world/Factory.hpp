@@ -1,14 +1,24 @@
 #pragma once
 
-#include <memory>
+#include <random>
 
 #include "game/units/Robot.hpp"
 
 constexpr int defaultSpawnInterval = 10;
 
+struct RobotConfig {
+    int attack = 5;
+    int speed = 1;
+    int maxEnergy = 10;
+    int maxHealth = 20;
+    AbilityType ability = AbilityType::Heal;
+};
+
 class Factory {
    private:
-    Robot spawningRobot_;
+    std::mt19937 generator;
+
+    RobotConfig robotConfig_;
     Point point_ = Point(0, 0);
     int height_;
     int width_;
@@ -16,7 +26,7 @@ class Factory {
     int stepCounter_ = 0;
 
    public:
-    Factory(Robot spawningRobot, int height = 2, int width = 2);
+    Factory(RobotConfig robotConfig, int height = 2, int width = 2);
     ~Factory();
 
     void setX(int x);
@@ -32,6 +42,8 @@ class Factory {
 
     int getHeight() const;
     int getWidth() const;
+
+    AbilityType getRandomAbility();
 
     std::unique_ptr<Robot> spawn();
 

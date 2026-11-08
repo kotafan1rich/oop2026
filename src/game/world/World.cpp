@@ -139,6 +139,17 @@ Cell& World::getCell(const Point& point) {
     return field_[point.getY()][point.getX()];
 }
 
+bool World::useAbility(Robot& owner, AbilityType abilityType,
+                       std::optional<Point> target) {
+    const auto& ownerAbilities = owner.getAllAbilities();
+    for (auto& ability : ownerAbilities) {
+        if (ability->getType() == abilityType) {
+            return ability->use(owner, *this, target);
+        }
+    }
+    return false;
+}
+
 void World::addRobot(std::unique_ptr<Robot> robot) {
     if (!robot) {
         return;
@@ -164,14 +175,17 @@ MoveResult World::moveRobot(Robot& robot, int dx, int dy) {
     }
 
     if (nextCell.getOccupantType() == OccupantType::Robot) {
-        Robot& other = findRobotAt(nextPoint);
-        bool isDead = robot.interact(other);
+        auto other = findRobotAt(nextPoint);
+        if (other) {
+            Robot& target = other->get();
+            bool isDead = robot.interact(target);
 
-        if (isDead && &other != player_.get()) {
-            killRobot(other);
+            if (isDead && &target != player_.get()) {
+                killRobot(target);
+            }
+
+            return MoveResult::Interacted;
         }
-
-        return MoveResult::Interacted;
     }
 
     getCell(robot.getPosition()).clearOccupant();
@@ -236,17 +250,20 @@ const std::vector<std::unique_ptr<Robot>>& World::getRobots() const {
     return robots_;
 }
 
-Robot& World::findRobotAt(const Point& point) {
+std::vector<std::unique_ptr<Robot>>& World::getRobots() { return robots_; }
+
+std::optional<std::reference_wrapper<Robot>> World::findRobotAt(
+    const Point& point) {
     if (getPlayer().getPosition() == point) {
-        return *player_;
+        return std::ref(*player_);
     }
 
     for (auto& robot : robots_) {
         if (robot->getPosition() == point) {
-            return *robot;
+            return std::ref(*robot);
         }
     }
-    throw std::out_of_range("Robot not found");
+    return std::nullopt;
 }
 
 bool World::hasRobotAt(const Point& point) const {
@@ -269,6 +286,29 @@ void World::moveBots() {
 
         pathFinder_.buildDistanceMap(player_->getPosition(),
                                      robot->getPosition());
+
+        auto abilityHeal = robot->getAbility(AbilityType::Heal);
+        auto abilityTeleport = robot->getAbility(AbilityType::Teleport);
+        bool used = true;
+        while (used) {
+            if (abilityHeal) {
+                Ability& ability = robot->getHealth() > 10 && abilityTeleport
+                                       ? abilityTeleport->get()
+                                       : abilityHeal->get();
+                Point from = robot->getPosition();
+                Point target =
+                    pathFinder_.getNextPointInRadius(from, ability.range());
+                used = ability.use(*robot, *this, target);
+            } else if (abilityTeleport) {
+                Ability& ability = *abilityTeleport;
+                Point from = robot->getPosition();
+                Point target =
+                    pathFinder_.getNextPointInRadius(from, ability.range());
+                used = ability.use(*robot, *this, target);
+            } else {
+                used = false;
+            }
+        }
         moveRobotUsingSpeed(*robot, [this](const Robot& movingRobot) {
             return pathFinder_.getNextPoint(movingRobot.getPosition());
         });

@@ -1,7 +1,5 @@
 #include "game/units/Player.hpp"
 
-#include <cmath>
-
 Player::Player() : Robot(defaultPlayerSpeed) {
     setTeam(Team::Friend);
     setHealCount(defaultPlayerHeal);
@@ -34,17 +32,12 @@ void Player::setVisibiltyRadius(int radius) {
 int Player::getVisibiltyRadius() const { return visibiltyRadius_; }
 
 bool Player::isInRadius(const Point& target) const {
-    int x1 = getPosition().getX();
-    int x2 = target.getX();
-    int y1 = getPosition().getY();
-    int y2 = target.getY();
-
-    return hypot(x2 - x1, y2 - y1) <= getVisibiltyRadius();
+    return getPosition().dist(target) <= getVisibiltyRadius();
 }
 
-void Player::gainExp(int value) {
+bool Player::gainExp(int value) {
     if (value <= 0) {
-        return;
+        return false;
     }
 
     experience_ += value;
@@ -56,7 +49,9 @@ void Player::gainExp(int value) {
         setMaxHealth(getMaxHealth() + 10);
         setAttack(getAttack() + 5);
         setMaxEnergy(getMaxEnergy() + 5);
+        return true;
     }
+    return false;
 }
 
 int Player::expToNextLevel() const { return getLevel() * 100; }

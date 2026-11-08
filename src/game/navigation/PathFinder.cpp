@@ -120,5 +120,41 @@ Point PathFinder::getNextPoint(const Point& from) const {
 
     return bestPoint;
 }
+Point PathFinder::getNextPointInRadius(const Point& from, int radius) const {
+    if (!ready_ || !world_.isInside(from)) {
+        return from;
+    }
+
+    const int width = world_.getWidth();
+    const int unreachable = std::numeric_limits<int>::max();
+
+    Point bestPoint = from;
+    int bestDistance = distances_[from.getY() * width + from.getX()];
+
+    for (int dy = -radius; dy <= radius; ++dy) {
+        for (int dx = -radius; dx <= radius; ++dx) {
+            Point candidate(from.getX() + dx, from.getY() + dy);
+
+            if (!world_.isInside(candidate) || from.dist(candidate) > radius) {
+                continue;
+            }
+
+            const Cell& cell = world_.getCell(candidate);
+            if (!cell.isWalkable() || cell.isTaken()) {
+                continue;
+            }
+
+            int distance =
+                distances_[candidate.getY() * width + candidate.getX()];
+
+            if (distance != unreachable && distance < bestDistance) {
+                bestDistance = distance;
+                bestPoint = candidate;
+            }
+        }
+    }
+
+    return bestPoint;
+}
 
 const std::vector<int>& PathFinder::getDistanceMap() { return distances_; }
