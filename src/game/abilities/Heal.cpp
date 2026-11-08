@@ -15,3 +15,5 @@ int Heal::energyCost() const { return cost_; }
 int Heal::range() const { return range_; }
 
 AbilityType Heal::getType() const { return AbilityType::Heal; }
+
+void Heal::upgrade() { healCount_ += 5; }

@@ -46,3 +46,5 @@ int Splash::energyCost() const { return cost_; }
 int Splash::range() const { return range_; }
 
 AbilityType Splash::getType() const { return AbilityType::Splash; }
+
+void Splash::upgrade() { range_ += 1; }

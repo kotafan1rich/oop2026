@@ -15,7 +15,10 @@ class Ability {
 
     virtual bool use(Robot& owner, World& world,
                      std::optional<Point> target) = 0;
+
     virtual int energyCost() const = 0;
     virtual int range() const = 0;
     virtual AbilityType getType() const = 0;
+
+    virtual void upgrade() = 0;
 };

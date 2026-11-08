@@ -36,3 +36,9 @@ int Teleport::range() const { return range_; }
 int Teleport::energyCost() const { return cost_; }
 
 AbilityType Teleport::getType() const { return AbilityType::Teleport; }
+
+void Teleport::upgrade() {
+    if (cost_ > 1) {
+        cost_ -= 1;
+    }
+}

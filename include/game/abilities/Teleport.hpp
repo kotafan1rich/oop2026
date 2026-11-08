@@ -15,4 +15,5 @@ class Teleport final : public Ability {
     int range() const;
     int energyCost() const;
     AbilityType getType() const;
+    void upgrade();
 };

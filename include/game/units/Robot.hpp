@@ -68,6 +68,7 @@ class Robot {
         AbilityType abilityType) const;
 
     bool attack(Robot& other);
+    bool attack(Robot& other, int damage);
     bool takeDamage(int amount);
     void heal(int amount);
     virtual bool interact(Robot& other);

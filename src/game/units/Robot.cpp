@@ -134,6 +134,14 @@ void Robot::onTurnEnd() {
 
 bool Robot::attack(Robot& other) { return other.takeDamage(getAttack()); }
 
+bool Robot::attack(Robot& other, int damage) {
+    if (damage <= 0) {
+        return false;
+    }
+
+    return other.takeDamage(damage);
+}
+
 bool Robot::takeDamage(int amount) {
     if (amount > 0) {
         setHealth(health_ - amount);

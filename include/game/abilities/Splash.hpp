@@ -15,4 +15,5 @@ class Splash final : public Ability {
     int energyCost() const;
     int range() const;
     AbilityType getType() const;
+    void upgrade();
 };

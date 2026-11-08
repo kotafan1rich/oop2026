@@ -28,7 +28,7 @@ bool RangedAttach::use(Robot& owner, World& world,
         return false;
     }
 
-    bool isDead = owner.attack(robot);
+    bool isDead = owner.attack(robot, damage_);
     if (isDead && &robot != &world.getPlayer()) {
         world.killRobot(robot);
         owner.gainExp(20);
@@ -44,3 +44,5 @@ int RangedAttach::energyCost() const { return cost_; }
 int RangedAttach::range() const { return range_; }
 
 AbilityType RangedAttach::getType() const { return AbilityType::RangedAttack; }
+
+void RangedAttach::upgrade() { damage_ += 5; }
