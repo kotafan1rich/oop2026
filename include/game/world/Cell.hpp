@@ -44,6 +44,8 @@ class Cell {
     const std::vector<StatusConfig>& statuses() const;
     void addStatus(StatusConfig status);
     void removeRandomStatus(std::mt19937& generator);
+    void removeStatus(StatusType type);
+    bool hasStatus() const;
 
     void markSeen();
     bool isSeen() const;

@@ -59,6 +59,7 @@ class Robot {
 
     void setAttack(int attack);
     int getAttack() const;
+    int getBaseAttack() const;
 
     void setSpeed(int speed);
     int getSpeed() const;

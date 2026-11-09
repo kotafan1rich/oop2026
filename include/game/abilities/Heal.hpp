@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Ability.hpp"
 #include "game/units/Robot.hpp"
 
@@ -13,9 +15,10 @@ class Heal final : public Ability {
     int range_ = 0;
 
    public:
-    bool use(Robot& owner, World& world, std::optional<Point> target);
-    int energyCost() const;
-    int range() const;
-    AbilityType getType() const;
-    void upgrade();
+    bool use(Robot& owner, World& world, std::optional<Point> target) override;
+    int energyCost() const override;
+    int range() const override;
+    AbilityType getType() const override;
+    std::unique_ptr<Status> createAppliedStatus(int value);
+    void upgrade() override;
 };

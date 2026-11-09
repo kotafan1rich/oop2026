@@ -1,5 +1,7 @@
 #include "game/units/Player.hpp"
 
+#include "game/statuses/AttackBoost.hpp"
+
 Player::Player() : Robot(defaultPlayerSpeed) {
     setTeam(Team::Friend);
     setHealCount(defaultPlayerHeal);
@@ -47,13 +49,42 @@ int Player::gainExp(int value) {
         level_++;
 
         setMaxHealth(getMaxHealth() + 10);
-        setAttack(getAttack() + 5);
+        setAttack(getBaseAttack() + 5);
         setMaxEnergy(getMaxEnergy() + 5);
     }
     return level_ - levelBefore;
 }
 
 int Player::expToNextLevel() const { return getLevel() * 100; }
+
+void Player::addItem(ItemType type) {
+    ++items_[static_cast<int>(type)];
+}
+
+int Player::getItemCount(ItemType type) const {
+    return items_[static_cast<int>(type)];
+}
+
+bool Player::useItem(ItemType type) {
+    int& count = items_[static_cast<int>(type)];
+    if (count == 0) return false;
+
+    switch (type) {
+        case ItemType::Health:
+            if (getHealth() == getMaxHealth()) return false;
+            heal(30);
+            break;
+        case ItemType::Energy:
+            if (getEnergy() == getMaxEnergy()) return false;
+            restoreEnergy(30);
+            break;
+        case ItemType::Attack:
+            addStatus(std::make_unique<AttackBoost>(3, 5));
+            break;
+    }
+    --count;
+    return true;
+}
 
 InteractResult Player::interact(Robot& other) {
     if (other.getTeam() == Team::Friend) {

@@ -64,9 +64,12 @@ std::unique_ptr<Robot> Factory::spawn(std::mt19937& generator) {
             newRobot->addAbility(std::make_unique<Heal>());
             break;
 
-        case AbilityType::RangedAttack:
-            newRobot->addAbility(std::make_unique<RangedAttach>());
+        case AbilityType::RangedAttack: {
+            auto ability = std::make_unique<RangedAttach>();
+            ability->addAppliedStatus(rangedBurningDefault);
+            newRobot->addAbility(std::move(ability));
             break;
+        }
         case AbilityType::Splash:
             newRobot->addAbility(std::make_unique<Splash>());
             break;

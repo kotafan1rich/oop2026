@@ -4,8 +4,11 @@
 
 #include "game/world/Point.hpp"
 
+struct StatusConfig;
+
 class Robot;
 class World;
+class Status;
 
 enum class AbilityType { Splash, RangedAttack, Heal, Teleport };
 

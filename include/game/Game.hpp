@@ -16,6 +16,7 @@ class Game {
     World world_;
 
     AbilityMenu abilityMenu_;
+    BacklightMode backlitingMode_ = BacklightMode::Default;
 
    public:
     Game(int height, int width);
@@ -33,6 +34,8 @@ class Game {
     std::unique_ptr<Ability> createAbility(AbilityType abilityType) const;
 
     std::optional<Point> choosePointInRadius(int radius);
+
+    void nextBacklightingMode();
 
     void handleGameEvents();
 };

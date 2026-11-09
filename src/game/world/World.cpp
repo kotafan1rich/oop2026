@@ -8,6 +8,7 @@
 
 #include "game/navigation/PathFinder.hpp"
 #include "game/statuses/Burning.hpp"
+#include "game/statuses/ItemPickup.hpp"
 #include "game/statuses/Overload.hpp"
 #include "game/statuses/Shield.hpp"
 #include "game/statuses/Slowdown.hpp"
@@ -100,6 +101,7 @@ void World::initDefaultLevel() {
 
 void World::generateCellStatuses() {
     std::discrete_distribution<int> statusCount({85, 12, 3});
+    std::uniform_int_distribution<int> itemChoice(0, 2);
 
     for (auto& row : field_) {
         for (auto& cell : row) {
@@ -112,11 +114,12 @@ void World::generateCellStatuses() {
                 continue;
             }
 
-            std::array<StatusConfig, 4> statuses = {{
+            std::array<StatusConfig, 5> statuses = {{
                 {StatusType::Slowdown, 1, 0},
                 {StatusType::Overload, 0, 0},
                 {StatusType::Burning, 3, 5},
                 {StatusType::Shield, 0, 20},
+                {StatusType::ItemPickup, 0, itemChoice(generator_)},
             }};
             std::shuffle(statuses.begin(), statuses.end(), generator_);
             for (int i = 0; i < count; ++i) {
@@ -195,6 +198,7 @@ bool World::useAbility(Robot& owner, AbilityType abilityType,
 
 void World::addStatuses(Robot& target, Cell& cell) {
     auto& statuses = cell.statuses();
+    bool pickedUpItem = false;
     for (const StatusConfig& statusConfig : statuses) {
         switch (statusConfig.stausType) {
             case StatusType::Burning:
@@ -211,11 +215,19 @@ void World::addStatuses(Robot& target, Cell& cell) {
                 target.addPendingStatus(
                     std::make_unique<Slowdown>(statusConfig.turns));
                 break;
+            case StatusType::ItemPickup:
+                if (&target == player_.get()) {
+                    ItemPickup pickup(static_cast<ItemType>(statusConfig.value));
+                    pickup.apply(*player_);
+                    pickedUpItem = true;
+                }
+                break;
 
             default:
                 break;
         }
     }
+    if (pickedUpItem) cell.removeStatus(StatusType::ItemPickup);
     cell.removeRandomStatus(generator_);
 }
 

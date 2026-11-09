@@ -11,6 +11,10 @@ enum class Command {
     Quit,
     Use,
     Enter,
+    NextBacklightingMode,
+    UseHealthItem,
+    UseEnergyItem,
+    UseAttackItem,
     None,
 };
 

@@ -8,6 +8,7 @@
 #include "game/units/Robot.hpp"
 #include "game/world/Factory.hpp"
 #include "game/world/World.hpp"
+#include "terminal/Renderer.hpp"
 
 Game::Game(int height, int width)
     : terminal_(),
@@ -64,8 +65,8 @@ void Game::Run() {
 
     while (true) {
         world_.markSeen();
-        renderer_.drawWorld(world_);
-        terminal_.draw(renderer_.renderWorld(world_));
+        renderer_.drawWorld(world_, backlitingMode_);
+        terminal_.draw(renderer_.renderWorld(world_, backlitingMode_));
 
         Command command = input_.getCommand();
         if (command == Command::Quit) break;
@@ -74,8 +75,8 @@ void Game::Run() {
             world_.moveBots();
 
             if (world_.endTurn()) {
-                renderer_.drawWorld(world_);
-                terminal_.draw(renderer_.renderWorld(world_));
+                renderer_.drawWorld(world_, backlitingMode_);
+                terminal_.draw(renderer_.renderWorld(world_, backlitingMode_));
                 break;
             }
         }
@@ -108,6 +109,21 @@ bool Game::processCommand(const Command& command) {
         case Command::Use:
             useAbility();
             processed = false;
+            break;
+
+        case Command::NextBacklightingMode:
+            nextBacklightingMode();
+            processed = false;
+            break;
+
+        case Command::UseHealthItem:
+            world_.getPlayer().useItem(ItemType::Health);
+            break;
+        case Command::UseEnergyItem:
+            world_.getPlayer().useItem(ItemType::Energy);
+            break;
+        case Command::UseAttackItem:
+            world_.getPlayer().useItem(ItemType::Attack);
             break;
     }
     handleGameEvents();
@@ -143,10 +159,10 @@ bool Game::useAbility() {
 std::optional<Point> Game::choosePointInRadius(int radius) {
     Point point = world_.getPlayer().getPosition();
     Point center = point;
-    renderer_.drawWorld(world_);
+    renderer_.drawWorld(world_, backlitingMode_);
     renderer_.highlightCircle(world_, center, radius + 1);
     renderer_.highlightPoint(world_, point);
-    terminal_.draw(renderer_.renderWorld(world_));
+    terminal_.draw(renderer_.renderWorld(world_, backlitingMode_));
 
     Command command = input_.getCommand();
     while (command != Command::Enter) {
@@ -168,6 +184,14 @@ std::optional<Point> Game::choosePointInRadius(int radius) {
                 break;
             case Command::Quit:
                 return std::nullopt;
+            case Command::NextBacklightingMode:
+                nextBacklightingMode();
+                renderer_.drawWorld(world_, backlitingMode_);
+                renderer_.highlightCircle(world_, center, radius + 1);
+                renderer_.highlightPoint(world_, point);
+                terminal_.draw(renderer_.renderWorld(world_, backlitingMode_));
+                command = input_.getCommand();
+                continue;
             default:
                 command = input_.getCommand();
                 continue;
@@ -176,14 +200,21 @@ std::optional<Point> Game::choosePointInRadius(int radius) {
         Point newPoint(newX, newY);
         if (world_.isInside(newPoint) && center.dist(newPoint) <= radius) {
             point = newPoint;
-            renderer_.drawWorld(world_);
+            renderer_.drawWorld(world_, backlitingMode_);
             renderer_.highlightCircle(world_, center, radius + 1);
             renderer_.highlightPoint(world_, point);
-            terminal_.draw(renderer_.renderWorld(world_));
+            terminal_.draw(renderer_.renderWorld(world_, backlitingMode_));
         }
         command = input_.getCommand();
     }
     return point;
+}
+
+void Game::nextBacklightingMode() {
+    int next = (static_cast<int>(backlitingMode_) + 1) %
+               static_cast<int>(BacklightMode::Count_);
+
+    backlitingMode_ = static_cast<BacklightMode>(next);
 }
 
 void Game::handleGameEvents() {
@@ -223,8 +254,11 @@ std::unique_ptr<Ability> Game::createAbility(AbilityType abilityType) const {
             return std::make_unique<Heal>();
         case AbilityType::Splash:
             return std::make_unique<Splash>();
-        case AbilityType::RangedAttack:
-            return std::make_unique<RangedAttach>();
+        case AbilityType::RangedAttack: {
+            auto ability = std::make_unique<RangedAttach>();
+            ability->addAppliedStatus(rangedBurningDefault);
+            return ability;
+        }
         case AbilityType::Teleport:
             return std::make_unique<Teleport>();
     }

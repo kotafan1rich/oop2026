@@ -8,13 +8,13 @@ Renderer::~Renderer() {}
 
 const RenderIcons& Renderer::getIcons() const { return icons_; }
 
-std::string Renderer::renderWorld(const World& world) {
+std::string Renderer::renderWorld(const World& world, BacklightMode mode) {
     const int width = world.getWidth();
     const int height = world.getHeight();
 
     const int rowLength = width;
 
-    std::string buffer = "";
+    std::string buffer = "\n";
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             buffer += cells_[y * rowLength + x].withColor();
@@ -22,19 +22,18 @@ std::string Renderer::renderWorld(const World& world) {
         buffer += "\n";
     }
 
-    std::string interafce = getInterface(world);
+    std::string interafce = getInterface(world, mode);
     buffer += "\n";
     buffer += interafce;
 
     return buffer;
 }
 
-void Renderer::drawWorld(const World& world) {
-    const int rowLength = world.getWidth();
-    drawField(world, rowLength);
-    drawFactory(world, rowLength);
-    drawRobots(world, rowLength);
-    drawPlayer(world, rowLength);
+void Renderer::drawWorld(const World& world, BacklightMode mode) {
+    drawField(world, mode);
+    drawFactory(world);
+    drawRobots(world, mode);
+    drawPlayer(world, mode);
 }
 
 void Renderer::highlightCircle(const World& world, Point center, int radius) {
@@ -63,29 +62,29 @@ void Renderer::highlightCircle(const World& world, Point center, int radius) {
 void Renderer::highlightPoint(const World& world, Point point) {
     if (world.isInside(point)) {
         cells_[point.getY() * (world.getWidth()) + point.getX()].background =
-            Color::Blue;
+            Color::Yellow;
     }
 }
 
-void Renderer::drawField(const World& world, const int rowLength) {
+void Renderer::drawField(const World& world, BacklightMode mode) {
     const int width = world.getWidth();
     const int height = world.getHeight();
-    cells_.resize(height * rowLength);
+    cells_.resize(height * width);
 
     const Player& player = world.getPlayer();
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             Point point(x, y);
+            bool inRadius = player.isInRadius(point);
             const Cell& cell = world.getCell(point);
-            RenderCell renderCell;
-            renderCell.symbol =
-                getTerrainSymbol(cell, player.isInRadius(point));
-            setCell(point, rowLength, renderCell);
+            RenderCell renderCell = getTerrainRenderCell(mode, cell, inRadius);
+            setCell(point, width, renderCell);
         }
     }
 }
 
-void Renderer::drawFactory(const World& world, const int rowLength) {
+void Renderer::drawFactory(const World& world) {
+    const int rowLength = world.getWidth();
     for (const auto& factory : world.getFactories()) {
         if (factory == nullptr) {
             continue;
@@ -98,7 +97,8 @@ void Renderer::drawFactory(const World& world, const int rowLength) {
                 const Cell& cell = world.getCell(point);
 
                 if (cell.isSeen()) {
-                    RenderCell renderCell;
+                    RenderCell renderCell =
+                        cells_[point.getY() * rowLength + point.getX()];
                     renderCell.symbol = getFactorySymbol();
                     setCell(point, rowLength, renderCell);
                 }
@@ -107,41 +107,55 @@ void Renderer::drawFactory(const World& world, const int rowLength) {
     }
 }
 
-void Renderer::drawRobots(const World& world, const int rowLength) {
+void Renderer::drawRobots(const World& world, BacklightMode mode) {
+    const int rowLength = world.getWidth();
     const Player& player = world.getPlayer();
     for (const auto& robot : world.getRobots()) {
         if (robot == nullptr) {
             continue;
         }
         if (player.isInRadius(robot->getPosition())) {
+            const Cell& cell = world.getCell(robot->getPosition());
             RenderCell renderCell;
             renderCell.symbol = getRobotSymbol(*robot);
-            renderCell.foreground = robot->getTeam() != player.getTeam()
-                                        ? Color::Red
-                                        : Color::Green;
+            renderCell.foreground = getRobotColor(mode, player, *robot);
+            renderCell.background = getTerrainColor(mode, cell, true);
             setCell(robot->getPosition(), rowLength, renderCell);
         }
     }
 }
 
-void Renderer::drawPlayer(const World& world, const int rowLength) {
+void Renderer::drawPlayer(const World& world, BacklightMode mode) {
     RenderIcons icons = getIcons();
     const Player& player = world.getPlayer();
+    const Cell& cell = world.getCell(player.getPosition());
 
     RenderCell renderCell;
     renderCell.symbol = icons.player;
     renderCell.foreground = Color::Green;
+    renderCell.background = getTerrainColor(mode, cell, true);
 
     if (player.isDead()) {
         renderCell.symbol = icons.deadRobot;
     }
-    setCell(player.getPosition(), rowLength, renderCell);
+    setCell(player.getPosition(), world.getWidth(), renderCell);
 }
 
-std::string Renderer::getInterface(const World& world) {
+RenderCell Renderer::getTerrainRenderCell(BacklightMode mode, const Cell& cell,
+                                          bool inRadius) {
+    RenderCell renderCell;
+    renderCell.symbol = getTerrainSymbol(cell, inRadius);
+    renderCell.background = getTerrainColor(mode, cell, inRadius);
+    return renderCell;
+}
+
+std::string Renderer::getInterface(const World& world, BacklightMode mode) {
     const Player& player = world.getPlayer();
 
     std::string buffer = getStatusStat(player) + "\n";
+
+    buffer += "\n" + getBacklightModes(mode) + "\n";
+
     buffer += "\nHealth: " + std::to_string(player.getHealth()) + "/" +
               std::to_string(player.getMaxHealth());
 
@@ -152,7 +166,10 @@ std::string Renderer::getInterface(const World& world) {
               std::to_string(player.getExperience()) + "/" +
               std::to_string(player.expToNextLevel()) + '\n';
 
-    buffer += "WASD: move  R/Space: rest  Q: quit  E: use ability\n";
+    buffer += "Items: 1 Health " + std::to_string(player.getItemCount(ItemType::Health)) +
+              "  2 Energy " + std::to_string(player.getItemCount(ItemType::Energy)) +
+              "  3 Attack " + std::to_string(player.getItemCount(ItemType::Attack)) + "\n";
+    buffer += "WASD: move  R/Space: rest  Q: quit  E: use ability  Tab: mode\n";
 
     return buffer;
 }
@@ -164,6 +181,17 @@ std::string Renderer::getStatusStat(const Player& player) {
             continue;
         }
         buffer += " " + getStatusText(status->getType());
+    }
+
+    return buffer;
+}
+
+std::string Renderer::getBacklightModes(BacklightMode mode) {
+    const int count = static_cast<int>(BacklightMode::Count_);
+    std::string buffer = "";
+    for (int i = 0; i < count; i++) {
+        BacklightMode currentMode = static_cast<BacklightMode>(i);
+        buffer += " " + getModeText(mode, currentMode);
     }
 
     return buffer;
@@ -203,6 +231,22 @@ char Renderer::getTerrainSymbol(const Cell& cell, bool inRadius) const {
     }
 }
 
+Color Renderer::getTerrainColor(BacklightMode mode, const Cell& cell,
+                                bool inRadius) const {
+    switch (mode) {
+        case BacklightMode::WalkableCells:
+            if (!cell.isWalkable() && cell.isSeen()) {
+                return Color::Yellow;
+            }
+            break;
+        case BacklightMode::StatusCells:
+            if (cell.hasStatus() && inRadius) {
+                return Color::Blue;
+            }
+    };
+    return Color::Default;
+}
+
 char Renderer::getRobotSymbol(const Robot& robot) const {
     RenderIcons icons = getIcons();
 
@@ -214,6 +258,19 @@ char Renderer::getRobotSymbol(const Robot& robot) const {
     }
 
     return icons.enemy;
+}
+
+Color Renderer::getRobotColor(BacklightMode mode, const Player& player,
+                              const Robot& robot) const {
+    switch (mode) {
+        case BacklightMode::Enemies:
+            if (player.getTeam() != robot.getTeam()) {
+                return Color::Red;
+            } else {
+                return Color::Green;
+            }
+    };
+    return Color::Default;
 }
 
 char Renderer::getFactorySymbol() const {
@@ -231,8 +288,39 @@ std::string Renderer::getStatusText(StatusType statusType) {
             return std::string(RenderStatuses::burning);
         case StatusType::Shield:
             return std::string(RenderStatuses::shield);
+        case StatusType::AttackBoost:
+            return std::string(RenderStatuses::attackBoost);
+        case StatusType::ItemPickup:
+            return {};
     }
     return {};
+}
+
+std::string Renderer::getModeText(BacklightMode selectedMode,
+                                  BacklightMode mode) const {
+    std::string text;
+    switch (mode) {
+        case BacklightMode::Default:
+            text += "Обычный";
+            break;
+        case ::BacklightMode::Enemies:
+            text += "Враги";
+            break;
+        case ::BacklightMode::StatusCells:
+            text += "Статусы";
+            break;
+        case ::BacklightMode::WalkableCells:
+            text += "Непроходимые";
+            break;
+
+        default:
+            break;
+    }
+    if (mode == selectedMode) {
+        text = "\033[44m" + text + "\033[0m";
+    }
+
+    return text;
 }
 
 std::string RenderCell::withColor() const {

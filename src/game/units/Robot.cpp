@@ -41,7 +41,15 @@ void Robot::setAttack(int attack) {
     }
 }
 
-int Robot::getAttack() const { return attack_; }
+int Robot::getAttack() const {
+    int attack = attack_;
+    for (const auto& status : statuses_) {
+        if (!status->isExpire()) attack += status->attackBonus();
+    }
+    return attack;
+}
+
+int Robot::getBaseAttack() const { return attack_; }
 
 void Robot::setSpeed(int speed) {
     if (speed > 0) {

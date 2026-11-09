@@ -32,12 +32,29 @@ const std::vector<StatusConfig>& Cell::statuses() const { return statuses_; }
 void Cell::addStatus(StatusConfig status) { statuses_.push_back(status); }
 
 void Cell::removeRandomStatus(std::mt19937& generator) {
-    if (statuses_.empty()) {
+    std::vector<int> candidates;
+    for (int i = 0; i < statuses_.size(); ++i) {
+        if (statuses_[i].stausType != StatusType::ItemPickup) {
+            candidates.push_back(i);
+        }
+    }
+    if (candidates.empty()) {
         return;
     }
-    std::uniform_int_distribution<int> choice(0, statuses_.size() - 1);
-    statuses_.erase(statuses_.begin() + choice(generator));
+    std::uniform_int_distribution<int> choice(0, candidates.size() - 1);
+    statuses_.erase(statuses_.begin() + candidates[choice(generator)]);
 }
+
+void Cell::removeStatus(StatusType type) {
+    for (auto it = statuses_.begin(); it != statuses_.end(); ++it) {
+        if (it->stausType == type) {
+            statuses_.erase(it);
+            return;
+        }
+    }
+}
+
+bool Cell::hasStatus() const { return !statuses_.empty(); }
 
 void Cell::markSeen() { isSeen_ = true; }
 

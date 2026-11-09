@@ -2,7 +2,14 @@
 
 class Robot;
 
-enum class StatusType { Slowdown, Overload, Burning, Shield };
+enum class StatusType {
+    Slowdown,
+    Overload,
+    Burning,
+    Shield,
+    ItemPickup,
+    AttackBoost
+};
 
 struct StatusConfig {
     StatusType stausType;
@@ -21,5 +28,6 @@ class Status {
     virtual bool blocksMovement() const { return false; }
     virtual bool blockAbilityAttempt() { return false; }
     virtual int absorbDamage(int damage) { return damage; }
+    virtual int attackBonus() const { return 0; }
     virtual void onTurnEnd(Robot&) {}
 };

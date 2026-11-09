@@ -25,12 +25,22 @@ Command Input::getCommand() const {
         case 'e':
             return Command::Use;
 
+        case '1':
+            return Command::UseHealthItem;
+        case '2':
+            return Command::UseEnergyItem;
+        case '3':
+            return Command::UseAttackItem;
+
         case '\n':
             return Command::Enter;
 
         case 'r':
         case ' ':
             return Command::Wait;
+
+        case '\t':
+            return Command::NextBacklightingMode;
 
         case 'q':
             return Command::Quit;

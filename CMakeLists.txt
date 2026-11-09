@@ -14,7 +14,9 @@ add_executable(game
     src/game/abilities/Splash.cpp
     src/game/abilities/Teleport.cpp
     src/game/navigation/PathFinder.cpp
+    src/game/statuses/AttackBoost.cpp
     src/game/statuses/Burning.cpp
+    src/game/statuses/ItemPickup.cpp
     src/game/statuses/Overload.cpp
     src/game/statuses/Shield.cpp
     src/game/statuses/Slowdown.cpp

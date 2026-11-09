@@ -1,6 +1,9 @@
 #pragma once
 
+#include <array>
+
 #include "Robot.hpp"
+#include "game/items/Item.hpp"
 
 constexpr int defaultExpiriense = 0;
 constexpr int defaultLevel = 1;
@@ -13,6 +16,7 @@ class Player : public Robot {
     int experience_ = defaultExpiriense;
     int level_ = defaultLevel;
     int visibiltyRadius_ = defaultVisibiltyRadius;
+    std::array<int, 3> items_{};
 
    public:
     Player();
@@ -24,6 +28,9 @@ class Player : public Robot {
     int getLevel() const;
     int gainExp(int value) override;
     int expToNextLevel() const;
+    void addItem(ItemType type);
+    int getItemCount(ItemType type) const;
+    bool useItem(ItemType type);
 
     void setVisibiltyRadius(int radius);
     int getVisibiltyRadius() const;

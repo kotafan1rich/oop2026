@@ -1,5 +1,6 @@
 #include "game/abilities/RangedAttach.hpp"
 
+#include "game/statuses/Burning.hpp"
 #include "game/units/Robot.hpp"
 #include "game/world/World.hpp"
 
@@ -28,7 +29,10 @@ bool RangedAttach::use(Robot& owner, World& world,
         return false;
     }
 
-    world.attackRobots(owner, robot, damage_);
+    bool killed = world.attackRobots(owner, robot, damage_);
+    if (!killed) {
+        robot.addPendingStatus(std::move(createAppliedStatus()));
+    }
 
     owner.expendEnergy(cost_);
 
@@ -40,5 +44,14 @@ int RangedAttach::energyCost() const { return cost_; }
 int RangedAttach::range() const { return range_; }
 
 AbilityType RangedAttach::getType() const { return AbilityType::RangedAttack; }
+
+void RangedAttach::addAppliedStatus(StatusConfig statusConfig) {
+    appliedStatusConfig_ = statusConfig;
+}
+
+std::unique_ptr<Status> RangedAttach::createAppliedStatus() {
+    return std::make_unique<Burning>(appliedStatusConfig_.turns,
+                                     appliedStatusConfig_.value);
+}
 
 void RangedAttach::upgrade() { damage_ += 5; }
