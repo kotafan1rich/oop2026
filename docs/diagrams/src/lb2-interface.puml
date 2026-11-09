@@ -1,0 +1,159 @@
+@startuml
+title ЛР2 — управление и визуализация (изменения относительно lb1)
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+hide empty members
+skinparam class {
+  BackgroundColor #DCE6F4
+  BorderColor #354A63
+  ArrowColor #354A63
+}
+
+class Game {
+  - abilityMenu_ : AbilityMenu
+  - backlitingMode_ : BacklightMode
+  + useAbility() : bool
+  + chooseAbility() : void
+  + addAbility(AbilityType) : void
+  + createAbility(AbilityType) const : unique_ptr<Ability>
+  + choosePointInRadius(int) : optional<Point>
+  + nextBacklightingMode() : void
+  + handleGameEvents() : void
+  + Game(int height, int width)
+  + Run() : void
+  + processCommand(const Command&) : bool
+}
+class Input {
+  + getChoice() const : Choice
+  + getCommand() const : Command
+}
+class AbilityMenu {
+  - terminal_ : Terminal&
+  - input_ : Input&
+  + AbilityMenu(Terminal&, Input&)
+  + buildMenu(vector<AbilityType>) : string
+  + choose() : AbilityType
+  + choose(vector<AbilityType>) : AbilityType
+}
+class Renderer {
+  - cells_ : vector<RenderCell>
+  + renderWorld(const World&, BacklightMode) : string
+  + highlightCircle(const World&, Point, int) : void
+  + highlightPoint(const World&, Point) : void
+  + drawWorld(const World&, BacklightMode) : void
+  + drawField(const World&, BacklightMode) : void
+  + drawFactory(const World&) : void
+  + drawRobots(const World&, BacklightMode) : void
+  + drawPlayer(const World&, BacklightMode) : void
+  + getTerrainRenderCell(BacklightMode, const Cell&, bool) : RenderCell
+  + getInterface(const World&, BacklightMode) : string
+  + getStatusStat(const Player&) : string
+  + getBacklightModes(BacklightMode) : string
+  + setCell(const Point&, int, RenderCell) : void
+  + getTerrainColor(BacklightMode, const Cell&, bool) const : Color
+  + getRobotColor(BacklightMode, const Player&, const Robot&) const : Color
+  + getStatusText(StatusType) : string
+  + getModeText(BacklightMode, BacklightMode) const : string
+}
+class RenderCell <<struct>> {
+  + symbol : char
+  + foreground : Color
+  + background : Color
+  + withColor() const : string
+}
+class RenderStatuses <<struct>> {
+  + slowdown : string_view
+  + overload : string_view
+  + burning : string_view
+  + shield : string_view
+  + attackBoost : string_view
+}
+enum BacklightMode {
+  Default
+  Enemies
+  WalkableCells
+  StatusCells
+  Count_
+}
+enum Color {
+  Default
+  Red
+  Green
+  Yellow
+  Blue
+}
+enum Choice {
+  One
+  Two
+  Three
+  Four
+  Quit
+  None
+}
+enum Command {
+  Up
+  Down
+  Right
+  Left
+  Wait
+  Quit
+  Use
+  Enter
+  NextBacklightingMode
+  UseHealthItem
+  UseEnergyItem
+  UseAttackItem
+  None
+}
+class RenderIcons <<struct>>
+class Terminal
+class World
+class Player
+class Robot
+class Cell
+class Point
+class Ability
+class GameEvent
+class Factory
+class PathFinder
+
+Game *-- Terminal : terminal_
+Game *-- Renderer : renderer_
+Game *-- Input : input_
+Game *-- World : world_
+Game *-- AbilityMenu : abilityMenu_
+Game --> BacklightMode : backlitingMode_
+Game ..> Command : обрабатывает
+Game ..> Ability : createAbility()
+Game ..> Point : choosePointInRadius()
+Game ..> GameEvent : handleGameEvents()
+AbilityMenu --> Terminal : terminal_ (ссылка)
+AbilityMenu --> Input : input_ (ссылка)
+Input --> Terminal : terminal_ (ссылка)
+Input ..> Command : getCommand()
+Input ..> Choice : getChoice()
+Renderer *-- RenderIcons : icons_
+Renderer *-- "0..*" RenderCell : cells_
+Renderer ..> World : drawWorld() / renderWorld()
+Renderer ..> Player : getStatusStat()
+Renderer ..> Robot : getRobotColor()
+Renderer ..> Cell : getTerrainRenderCell()
+Renderer ..> Point : highlightPoint()
+Renderer --> BacklightMode : режим
+Renderer --> Color : цвет
+Renderer ..> RenderStatuses : getStatusText()
+RenderCell --> Color : foreground / background
+World *-- "0..*" Cell : field_
+World *-- "0..*" Robot : robots_
+World *-- "0..1" Player : player_
+World *-- "0..*" Factory : factories_
+World *-- PathFinder : pathFinder_
+World *-- "0..*" GameEvent : events_
+Player --|> Robot
+Robot *-- Point : point_
+Factory *-- Point : point_
+PathFinder --> World : world_ (ссылка)
+PathFinder *-- Point : target_
+@enduml

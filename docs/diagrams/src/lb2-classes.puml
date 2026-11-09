@@ -1,0 +1,500 @@
+@startuml
+title Диаграмма классов лабораторной работы № 2
+top to bottom direction
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 20
+skinparam ranksep 35
+skinparam class {
+  BackgroundColor #DCE6F4
+  BorderColor #354A63
+  ArrowColor #354A63
+}
+legend left
+  В классах ЛР1 показаны только новые и изменённые методы.
+  unique_ptr обозначает исключительное владение объектом.
+endlegend
+
+interface Ability {
+  + use(Robot& owner, World& world, optional<Point> target) : bool
+  + energyCost() const : int
+  + range() const : int
+  + getType() const : AbilityType
+  + upgrade() : void
+}
+
+class Splash {
+  - cost_ : int
+  - range_ : int
+  - appliedStatusConfig_ : StatusConfig
+  + use(Robot&, World&, optional<Point>) : bool
+  + energyCost() const : int
+  + range() const : int
+  + getType() const : AbilityType
+  + createAppliedStatus() : unique_ptr<Status>
+  + upgrade() : void
+}
+
+class RangedAttach {
+  - cost_ : int
+  - range_ : int
+  - damage_ : int
+  - appliedStatusConfig_ : StatusConfig
+  + use(Robot&, World&, optional<Point>) : bool
+  + energyCost() const : int
+  + range() const : int
+  + getType() const : AbilityType
+  + addAppliedStatus(StatusConfig) : void
+  + createAppliedStatus() : unique_ptr<Status>
+  + upgrade() : void
+}
+
+class Heal {
+  - cost_ : int
+  - healCount_ : int
+  - range_ : int
+  + use(Robot&, World&, optional<Point>) : bool
+  + energyCost() const : int
+  + range() const : int
+  + getType() const : AbilityType
+  + createAppliedStatus(int) : unique_ptr<Status>
+  + upgrade() : void
+}
+
+class Teleport {
+  - cost_ : int
+  - range_ : int
+  + use(Robot&, World&, optional<Point>) : bool
+  + energyCost() const : int
+  + range() const : int
+  + getType() const : AbilityType
+  + upgrade() : void
+}
+
+enum AbilityType {
+  Splash
+  RangedAttack
+  Heal
+  Teleport
+}
+
+class AbilityMenu {
+  - terminal_ : Terminal&
+  - input_ : Input&
+  + AbilityMenu(Terminal&, Input&)
+  + buildMenu(vector<AbilityType>) : string
+  + choose() : AbilityType
+  + choose(vector<AbilityType>) : AbilityType
+}
+
+class Robot {
+  - abilities_ : vector<unique_ptr<Ability>>
+  + gainExp(int) : int
+  + interact(Robot&) : InteractResult
+  + addAbility(unique_ptr<Ability>) : void
+  + getAllAbilities() const : const vector<unique_ptr<Ability>>&
+  + getAllAbilityTypes() const : vector<AbilityType>
+  + getAbility(AbilityType) const : optional<ref<Ability>>
+  + upgradeAbility(AbilityType) : bool
+  - statuses_ : vector<unique_ptr<Status>>
+  - pendingStatuses_ : vector<unique_ptr<Status>>
+  + addStatus(unique_ptr<Status>) : void
+  + addPendingStatus(unique_ptr<Status>) : void
+  + getAllStatuses() const : const vector<unique_ptr<Status>>&
+  + getStatus(StatusType) const : optional<ref<Status>>
+  + clearExpiredStatuses() : void
+  + getBaseAttack() const : int
+  + attack(Robot&) : bool
+  + attack(Robot&, int) : bool
+  + getAttack() const : int
+  + takeDamage(int) : bool
+  + onTurnEnd() : void
+}
+
+class Player {
+  + gainExp(int) : int <<override>>
+  + interact(Robot&) : InteractResult <<override>>
+  - items_ : array<int, 3>
+  + addItem(ItemType) : void
+  + getItemCount(ItemType) const : int
+  + useItem(ItemType) : bool
+  + isInRadius(const Point&) const : bool
+}
+
+class World {
+  + useAbility(Robot&, AbilityType, optional<Point>) : bool
+  + grantExp(Robot&, int) : void
+  + getRobots() : vector<unique_ptr<Robot>>&
+  + findRobotAt(const Point&) : optional<ref<Robot>>
+  + getDistanceMap() : const vector<int>&
+  - generator_ : mt19937
+  - events_ : queue<GameEvent>
+  - generateCellStatuses() : void
+  + addStatuses(Robot&, Cell&) : void
+  + attackRobots(Robot&, Robot&) : bool
+  + attackRobots(Robot&, Robot&, int) : bool
+  + interactRobots(Robot&, Robot&) : InteractResult
+  + popEvent() : optional<GameEvent>
+  + pushEvent(GameEvent) : void
+  + moveRobot(Robot&, int, int) : MoveResult
+  + moveBots() : void
+  + endTurn() : bool
+}
+
+class Factory {
+  - robotConfig_ : RobotConfig
+  + Factory(RobotConfig, int height = 2, int width = 2)
+  + getRandomAbility(mt19937&) : AbilityType
+  + spawn(mt19937&) : unique_ptr<Robot>
+}
+
+class RobotConfig <<struct>> {
+  + attack : int
+  + speed : int
+  + maxEnergy : int
+  + maxHealth : int
+  + ability : AbilityType
+}
+
+class Game {
+  - abilityMenu_ : AbilityMenu
+  + useAbility() : bool
+  + chooseAbility() : void
+  + addAbility(AbilityType) : void
+  + createAbility(AbilityType) const : unique_ptr<Ability>
+  + choosePointInRadius(int) : optional<Point>
+  + handleGameEvents() : void
+  - backlitingMode_ : BacklightMode
+  + nextBacklightingMode() : void
+  + Game(int height, int width)
+  + Run() : void
+  + processCommand(const Command&) : bool
+}
+
+class Point {
+  + dist(const Point&) const : double
+}
+
+class Cell {
+  - statuses_ : vector<StatusConfig>
+  + statuses() const : const vector<StatusConfig>&
+  + addStatus(StatusConfig) : void
+  + removeRandomStatus(mt19937&) : void
+  + removeStatus(StatusType) : void
+  + hasStatus() const : bool
+}
+
+class PathFinder {
+  + getNextPointInRadius(const Point&, int) const : Point
+  + getDistanceMap() : const vector<int>&
+}
+
+class Terminal
+
+abstract class Status {
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + blocksMovement() const : bool
+  + blockAbilityAttempt() : bool
+  + absorbDamage(int) : int
+  + attackBonus() const : int
+  + onTurnEnd(Robot&) : void
+}
+
+class StatusConfig <<struct>> {
+  + stausType : StatusType
+  + turns : int
+  + value : int
+}
+
+class Input {
+  + getChoice() const : Choice
+  + getCommand() const : Command
+}
+
+enum Choice {
+  One
+  Two
+  Three
+  Four
+  Quit
+  None
+}
+
+enum Team {
+  Friend
+  Enemy
+}
+
+enum MoveResult {
+  Blocked
+  Moved
+  Interacted
+}
+
+enum TerrainType {
+  Floor
+  Wall
+  Swamp
+}
+
+enum OccupantType {
+  Empty
+  Factory
+  Robot
+}
+
+enum InteractResult {
+  NotInteracted
+  HealSelf
+  Kill
+  Damaged
+}
+
+class Slowdown {
+  - remainingTurns_ : int
+  + Slowdown(int turns = 1)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + blocksMovement() const : bool
+  + onTurnEnd(Robot&) : void
+}
+
+class Overload {
+  - consumed_ : bool
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + blockAbilityAttempt() : bool
+}
+
+class Burning {
+  - remainingTurns_ : int
+  - damage_ : int
+  + Burning(int turns, int damage = 5)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + onTurnEnd(Robot&) : void
+}
+
+class Shield {
+  - remainingShield_ : int
+  + Shield(int amount)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + absorbDamage(int) : int
+}
+
+class AttackBoost {
+  - remainingTurns_ : int
+  - bonus_ : int
+  + AttackBoost(int turns, int bonus)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + attackBonus() const : int
+  + onTurnEnd(Robot&) : void
+}
+
+class ItemPickup {
+  - item_ : ItemType
+  - collected_ : bool
+  + ItemPickup(ItemType)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + apply(Player&) : void
+}
+
+enum StatusType {
+  Slowdown
+  Overload
+  Burning
+  Shield
+  ItemPickup
+  AttackBoost
+}
+
+enum ItemType {
+  Health
+  Energy
+  Attack
+}
+
+class GameEvent <<struct>> {
+  + eventType : EvnetType
+  + point : optional<Point>
+}
+
+enum EvnetType {
+  LevelUp
+  Damage
+  Heal
+}
+
+class Renderer {
+  - cells_ : vector<RenderCell>
+  + renderWorld(const World&, BacklightMode) : string
+  + highlightCircle(const World&, Point, int) : void
+  + highlightPoint(const World&, Point) : void
+  + drawWorld(const World&, BacklightMode) : void
+  + drawField(const World&, BacklightMode) : void
+  + drawFactory(const World&) : void
+  + drawRobots(const World&, BacklightMode) : void
+  + drawPlayer(const World&, BacklightMode) : void
+  + getTerrainRenderCell(BacklightMode, const Cell&, bool) : RenderCell
+  + getInterface(const World&, BacklightMode) : string
+  + getStatusStat(const Player&) : string
+  + getBacklightModes(BacklightMode) : string
+  + setCell(const Point&, int, RenderCell) : void
+  + getTerrainColor(BacklightMode, const Cell&, bool) const : Color
+  + getRobotColor(BacklightMode, const Player&, const Robot&) const : Color
+  + getStatusText(StatusType) : string
+  + getModeText(BacklightMode, BacklightMode) const : string
+}
+
+class RenderCell <<struct>> {
+  + symbol : char
+  + foreground : Color
+  + background : Color
+  + withColor() const : string
+}
+
+class RenderStatuses <<struct>> {
+  + slowdown : string_view
+  + overload : string_view
+  + burning : string_view
+  + shield : string_view
+  + attackBoost : string_view
+}
+
+enum BacklightMode {
+  Default
+  Enemies
+  WalkableCells
+  StatusCells
+  Count_
+}
+
+enum Color {
+  Default
+  Red
+  Green
+  Yellow
+  Blue
+}
+
+enum Command {
+  Up
+  Down
+  Right
+  Left
+  Wait
+  Quit
+  Use
+  Enter
+  NextBacklightingMode
+  UseHealthItem
+  UseEnergyItem
+  UseAttackItem
+  None
+}
+
+class RenderIcons <<struct>>
+
+Splash --|> Ability
+RangedAttach --|> Ability
+Heal --|> Ability
+Teleport --|> Ability
+Player --|> Robot
+Robot *-- "0..*" Ability : abilities_
+Robot --> AbilityType : выбор / улучшение
+Ability ..> AbilityType : getType()
+Ability ..> World : use()
+Ability ..> Point : target
+Splash *-- StatusConfig : appliedStatusConfig_
+RangedAttach *-- StatusConfig : appliedStatusConfig_
+Splash ..> Status : createAppliedStatus()
+RangedAttach ..> Status : createAppliedStatus()
+Heal ..> Status : createAppliedStatus()
+World *-- "0..*" Robot : robots_
+World *-- "0..1" Player : player_
+World *-- "0..*" Factory : factories_
+World *-- "0..*" Cell : field_
+World *-- PathFinder : pathFinder_
+World ..> AbilityType : useAbility()
+Factory *-- RobotConfig : robotConfig_
+Factory ..> Robot : spawn()
+RobotConfig --> AbilityType : ability
+Game *-- World : world_
+Game *-- AbilityMenu : abilityMenu_
+Game *-- Input : input_
+Game *-- Terminal : terminal_
+AbilityMenu --> Terminal : terminal_ (ссылка)
+AbilityMenu --> Input : input_ (ссылка)
+AbilityMenu ..> AbilityType : choose()
+Input --> Terminal : terminal_ (ссылка)
+Input ..> Choice : getChoice()
+Game ..> Point : choosePointInRadius()
+Robot *-- Point : point_
+Robot --> Team : team_
+Robot --> InteractResult : interact()
+Player ..> Point : isInRadius()
+Cell --> TerrainType : terrainType_
+Cell --> OccupantType : occupant_
+World ..> MoveResult : moveRobot()
+PathFinder --> World : world_ (ссылка)
+PathFinder *-- Point : target_
+Factory *-- Point : point_
+Slowdown --|> Status
+Overload --|> Status
+Burning --|> Status
+Shield --|> Status
+AttackBoost --|> Status
+ItemPickup --|> Status
+Robot *-- "0..*" Status : statuses_ / pendingStatuses_
+Robot --> StatusType : getStatus()
+Status ..> StatusType : getType()
+Status ..> Robot : onTurnEnd()
+ItemPickup --> ItemType : item_
+ItemPickup ..> Player : apply()
+Player --> ItemType : инвентарь
+Cell *-- "0..*" StatusConfig : statuses_
+StatusConfig --> StatusType : stausType
+World *-- "0..*" GameEvent : events_
+World --> InteractResult : interactRobots()
+GameEvent --> EvnetType : eventType
+GameEvent --> Point : point
+Game *-- Renderer : renderer_
+Game --> BacklightMode : backlitingMode_
+Game ..> Command : обрабатывает
+Game ..> Ability : createAbility()
+Game ..> GameEvent : handleGameEvents()
+Input ..> Command : getCommand()
+Renderer *-- RenderIcons : icons_
+Renderer *-- "0..*" RenderCell : cells_
+Renderer ..> World : drawWorld() / renderWorld()
+Renderer ..> Player : getStatusStat()
+Renderer ..> Robot : getRobotColor()
+Renderer ..> Cell : getTerrainRenderCell()
+Renderer ..> Point : highlightPoint()
+Renderer --> BacklightMode : режим
+Renderer --> Color : цвет
+Renderer ..> RenderStatuses : getStatusText()
+RenderCell --> Color : foreground / background
+
+Ability ..> Robot : use()
+Game ..> AbilityType : createAbility()
+AbilityMenu ..> Choice : choose()
+World ..> Status : addStatuses()
+Player ..> AttackBoost : useItem()
+Heal ..> Shield : createAppliedStatus()
+Splash ..> Overload : createAppliedStatus()
+RangedAttach ..> Burning : createAppliedStatus()
+@enduml

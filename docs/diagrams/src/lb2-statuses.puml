@@ -1,0 +1,187 @@
+@startuml
+title ЛР2 — статусы и предметы (изменения относительно lb1)
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+hide empty members
+skinparam class {
+  BackgroundColor #DCE6F4
+  BorderColor #354A63
+  ArrowColor #354A63
+}
+
+abstract class Status {
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + blocksMovement() const : bool
+  + blockAbilityAttempt() : bool
+  + absorbDamage(int) : int
+  + attackBonus() const : int
+  + onTurnEnd(Robot&) : void
+}
+class Slowdown {
+  - remainingTurns_ : int
+  + Slowdown(int turns = 1)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + blocksMovement() const : bool
+  + onTurnEnd(Robot&) : void
+}
+class Overload {
+  - consumed_ : bool
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + blockAbilityAttempt() : bool
+}
+class Burning {
+  - remainingTurns_ : int
+  - damage_ : int
+  + Burning(int turns, int damage = 5)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + onTurnEnd(Robot&) : void
+}
+class Shield {
+  - remainingShield_ : int
+  + Shield(int amount)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + absorbDamage(int) : int
+}
+class AttackBoost {
+  - remainingTurns_ : int
+  - bonus_ : int
+  + AttackBoost(int turns, int bonus)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + attackBonus() const : int
+  + onTurnEnd(Robot&) : void
+}
+class ItemPickup {
+  - item_ : ItemType
+  - collected_ : bool
+  + ItemPickup(ItemType)
+  + getType() const : StatusType
+  + isExpire() const : bool
+  + repeat(const Status&) : void
+  + apply(Player&) : void
+}
+enum StatusType {
+  Slowdown
+  Overload
+  Burning
+  Shield
+  ItemPickup
+  AttackBoost
+}
+class StatusConfig <<struct>> {
+  + stausType : StatusType
+  + turns : int
+  + value : int
+}
+enum ItemType {
+  Health
+  Energy
+  Attack
+}
+class Robot {
+  - statuses_ : vector<unique_ptr<Status>>
+  - pendingStatuses_ : vector<unique_ptr<Status>>
+  + addStatus(unique_ptr<Status>) : void
+  + addPendingStatus(unique_ptr<Status>) : void
+  + getAllStatuses() const : const vector<unique_ptr<Status>>&
+  + getStatus(StatusType) const : optional<ref<Status>>
+  + clearExpiredStatuses() : void
+  + getBaseAttack() const : int
+  + attack(Robot&) : bool
+  + attack(Robot&, int) : bool
+  + getAttack() const : int
+  + takeDamage(int) : bool
+  + interact(Robot&) : InteractResult
+  + onTurnEnd() : void
+}
+class Player {
+  - items_ : array<int, 3>
+  + addItem(ItemType) : void
+  + getItemCount(ItemType) const : int
+  + useItem(ItemType) : bool
+  + interact(Robot&) : InteractResult <<override>>
+}
+class Cell {
+  - statuses_ : vector<StatusConfig>
+  + statuses() const : const vector<StatusConfig>&
+  + addStatus(StatusConfig) : void
+  + removeRandomStatus(mt19937&) : void
+  + removeStatus(StatusType) : void
+  + hasStatus() const : bool
+}
+class World {
+  - generator_ : mt19937
+  - events_ : queue<GameEvent>
+  - generateCellStatuses() : void
+  + addStatuses(Robot&, Cell&) : void
+  + attackRobots(Robot&, Robot&) : bool
+  + attackRobots(Robot&, Robot&, int) : bool
+  + interactRobots(Robot&, Robot&) : InteractResult
+  + popEvent() : optional<GameEvent>
+  + pushEvent(GameEvent) : void
+  + moveRobot(Robot&, int, int) : MoveResult
+  + endTurn() : bool
+}
+class GameEvent <<struct>> {
+  + eventType : EvnetType
+  + point : optional<Point>
+}
+enum EvnetType {
+  LevelUp
+  Damage
+  Heal
+}
+enum InteractResult {
+  NotInteracted
+  HealSelf
+  Kill
+  Damaged
+}
+class Point
+class Factory
+class PathFinder
+
+Slowdown --|> Status
+Overload --|> Status
+Burning --|> Status
+Shield --|> Status
+AttackBoost --|> Status
+ItemPickup --|> Status
+Player --|> Robot
+Robot *-- "0..*" Status : statuses_ / pendingStatuses_
+Robot --> StatusType : getStatus()
+Robot --> InteractResult : interact()
+Status ..> StatusType : getType()
+Status ..> Robot : onTurnEnd()
+ItemPickup --> ItemType : item_
+ItemPickup ..> Player : apply()
+Player --> ItemType : инвентарь
+Cell *-- "0..*" StatusConfig : statuses_
+StatusConfig --> StatusType : stausType
+World *-- "0..*" Cell : field_
+World *-- "0..*" Robot : robots_
+World *-- "0..1" Player : player_
+World *-- "0..*" Factory : factories_
+World *-- PathFinder : pathFinder_
+World *-- "0..*" GameEvent : events_
+World --> InteractResult : interactRobots()
+GameEvent --> EvnetType : eventType
+GameEvent --> Point : point
+Robot *-- Point : point_
+PathFinder --> World : world_ (ссылка)
+PathFinder *-- Point : target_
+Factory *-- Point : point_
+@enduml
