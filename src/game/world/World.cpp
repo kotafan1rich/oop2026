@@ -1,11 +1,16 @@
 #include "game/world/World.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <exception>
 #include <queue>
 
 #include "game/navigation/PathFinder.hpp"
+#include "game/statuses/Burning.hpp"
+#include "game/statuses/Overload.hpp"
+#include "game/statuses/Shield.hpp"
+#include "game/statuses/Slowdown.hpp"
 #include "game/units/Robot.hpp"
 #include "game/world/Cell.hpp"
 
@@ -93,7 +98,37 @@ void World::initDefaultLevel() {
     }
 }
 
+void World::generateCellStatuses() {
+    std::discrete_distribution<int> statusCount({85, 12, 3});
+
+    for (auto& row : field_) {
+        for (auto& cell : row) {
+            if (!cell.isWalkable()) {
+                continue;
+            }
+
+            int count = statusCount(generator_);
+            if (count == 0) {
+                continue;
+            }
+
+            std::array<StatusConfig, 4> statuses = {{
+                {StatusType::Slowdown, 1, 0},
+                {StatusType::Overload, 0, 0},
+                {StatusType::Burning, 3, 5},
+                {StatusType::Shield, 0, 20},
+            }};
+            std::shuffle(statuses.begin(), statuses.end(), generator_);
+            for (int i = 0; i < count; ++i) {
+                cell.addStatus(statuses[i]);
+            }
+        }
+    }
+}
+
 World::World(int height, int width) : pathFinder_(*this) {
+    generator_ = std::mt19937(std::random_device{}());
+
     height = std::min(maxHeight, height);
     height_ = std::max(minHeight, height);
 
@@ -118,6 +153,7 @@ World::World(int height, int width) : pathFinder_(*this) {
     }
 
     initDefaultLevel();
+    generateCellStatuses();
 }
 
 World::~World() {}
@@ -142,6 +178,12 @@ Cell& World::getCell(const Point& point) {
 
 bool World::useAbility(Robot& owner, AbilityType abilityType,
                        std::optional<Point> target) {
+    for (auto& status : owner.getAllStatuses()) {
+        if (status->blockAbilityAttempt()) {
+            owner.clearExpiredStatuses();
+            return true;
+        }
+    }
     const auto& ownerAbilities = owner.getAllAbilities();
     for (auto& ability : ownerAbilities) {
         if (ability->getType() == abilityType) {
@@ -151,11 +193,37 @@ bool World::useAbility(Robot& owner, AbilityType abilityType,
     return false;
 }
 
+void World::addStatuses(Robot& target, Cell& cell) {
+    auto& statuses = cell.statuses();
+    for (const StatusConfig& statusConfig : statuses) {
+        switch (statusConfig.stausType) {
+            case StatusType::Burning:
+                target.addPendingStatus(std::make_unique<Burning>(
+                    statusConfig.turns, statusConfig.value));
+                break;
+            case StatusType::Overload:
+                target.addPendingStatus(std::make_unique<Overload>());
+                break;
+            case StatusType::Shield:
+                target.addPendingStatus(std::make_unique<Shield>(statusConfig.value));
+                break;
+            case StatusType::Slowdown:
+                target.addPendingStatus(
+                    std::make_unique<Slowdown>(statusConfig.turns));
+                break;
+
+            default:
+                break;
+        }
+    }
+    cell.removeRandomStatus(generator_);
+}
+
 std::optional<GameEvent> World::popEvent() {
     if (events_.empty()) {
         return std::nullopt;
     }
-    GameEvent event = events_.back();
+    GameEvent event = events_.front();
     events_.pop();
     return event;
 }
@@ -204,6 +272,12 @@ InteractResult World::interactRobots(Robot& owner, Robot& target) {
 }
 
 MoveResult World::moveRobot(Robot& robot, int dx, int dy) {
+    for (auto& status : robot.getAllStatuses()) {
+        if (status->blocksMovement()) {
+            return MoveResult::Moved;
+        }
+    }
+
     Point nextPoint(robot.getX() + dx, robot.getY() + dy);
 
     if (!isInside(nextPoint)) {
@@ -229,9 +303,12 @@ MoveResult World::moveRobot(Robot& robot, int dx, int dy) {
         }
     }
 
+    addStatuses(robot, nextCell);
+
     getCell(robot.getPosition()).clearOccupant();
-    robot.setPosition(nextPoint);
     nextCell.setOccupantType(OccupantType::Robot);
+
+    robot.setPosition(nextPoint);
 
     return MoveResult::Moved;
 }
@@ -342,13 +419,13 @@ void World::moveBots() {
                 Point from = robot->getPosition();
                 Point target =
                     pathFinder_.getNextPointInRadius(from, ability.range());
-                used = ability.use(*robot, *this, target);
+                used = useAbility(*robot, ability.getType(), target);
             } else if (abilityTeleport) {
                 Ability& ability = *abilityTeleport;
                 Point from = robot->getPosition();
                 Point target =
                     pathFinder_.getNextPointInRadius(from, ability.range());
-                used = ability.use(*robot, *this, target);
+                used = useAbility(*robot, ability.getType(), target);
             } else {
                 used = false;
             }
@@ -472,11 +549,19 @@ bool World::endTurn() {
             robot->onTurnEnd();
         }
     }
+    std::erase_if(robots_, [this](const auto& robot) {
+        if (robot && robot->isDead()) {
+            getCell(robot->getPosition()).clearOccupant();
+            return true;
+        }
+        return false;
+    });
+
     for (auto& factory : factories_) {
         if (factory) {
             Point spawnPoint(factory->getX() - 1, factory->getY());
             if (isInside(spawnPoint) && !getCell(spawnPoint).isTaken()) {
-                auto newRobot = factory->spawn();
+                auto newRobot = factory->spawn(generator_);
                 if (newRobot) {
                     newRobot->setPosition(spawnPoint);
                     addRobot(std::move(newRobot));

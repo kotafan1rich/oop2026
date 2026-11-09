@@ -141,8 +141,9 @@ void Renderer::drawPlayer(const World& world, const int rowLength) {
 std::string Renderer::getInterface(const World& world) {
     const Player& player = world.getPlayer();
 
-    std::string buffer = "\nHealth: " + std::to_string(player.getHealth()) +
-                         "/" + std::to_string(player.getMaxHealth());
+    std::string buffer = getStatusStat(player) + "\n";
+    buffer += "\nHealth: " + std::to_string(player.getHealth()) + "/" +
+              std::to_string(player.getMaxHealth());
 
     buffer += "  Energy: " + std::to_string(player.getEnergy()) + "/" +
               std::to_string(player.getMaxEnergy()) + "\n";
@@ -152,6 +153,18 @@ std::string Renderer::getInterface(const World& world) {
               std::to_string(player.expToNextLevel()) + '\n';
 
     buffer += "WASD: move  R/Space: rest  Q: quit  E: use ability\n";
+
+    return buffer;
+}
+
+std::string Renderer::getStatusStat(const Player& player) {
+    std::string buffer = "";
+    for (auto& status : player.getAllStatuses()) {
+        if (status->isExpire()) {
+            continue;
+        }
+        buffer += " " + getStatusText(status->getType());
+    }
 
     return buffer;
 }
@@ -206,6 +219,20 @@ char Renderer::getRobotSymbol(const Robot& robot) const {
 char Renderer::getFactorySymbol() const {
     RenderIcons icons = getIcons();
     return icons.factory;
+}
+
+std::string Renderer::getStatusText(StatusType statusType) {
+    switch (statusType) {
+        case StatusType::Slowdown:
+            return std::string(RenderStatuses::slowdown);
+        case StatusType::Overload:
+            return std::string(RenderStatuses::overload);
+        case StatusType::Burning:
+            return std::string(RenderStatuses::burning);
+        case StatusType::Shield:
+            return std::string(RenderStatuses::shield);
+    }
+    return {};
 }
 
 std::string RenderCell::withColor() const {

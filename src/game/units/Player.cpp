@@ -64,8 +64,4 @@ InteractResult Player::interact(Robot& other) {
     return Robot::interact(other);
 }
 
-void Player::onTurnEnd() {
-    if (!isDead()) {
-        restoreEnergy(defaultEnergyRecovery);
-    }
-}
+void Player::onTurnEnd() { Robot::onTurnEnd(); }

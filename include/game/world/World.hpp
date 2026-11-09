@@ -35,6 +35,8 @@ struct GameEvent {
 
 class World {
    private:
+    std::mt19937 generator_;
+
     int height_;
     int width_;
 
@@ -48,6 +50,7 @@ class World {
     PathFinder pathFinder_;
 
     void initDefaultLevel();
+    void generateCellStatuses();
 
     bool moveRobotUsingSpeed(
         Robot& robot,
@@ -65,6 +68,7 @@ class World {
 
     bool useAbility(Robot& owner, AbilityType ability,
                     std::optional<Point> target);
+    void addStatuses(Robot& target, Cell& cell);
 
     std::optional<GameEvent> popEvent();
     void pushEvent(GameEvent event);

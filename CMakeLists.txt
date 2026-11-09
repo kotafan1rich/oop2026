@@ -14,6 +14,10 @@ add_executable(game
     src/game/abilities/Splash.cpp
     src/game/abilities/Teleport.cpp
     src/game/navigation/PathFinder.cpp
+    src/game/statuses/Burning.cpp
+    src/game/statuses/Overload.cpp
+    src/game/statuses/Shield.cpp
+    src/game/statuses/Slowdown.cpp
     src/game/units/Player.cpp
     src/game/units/Robot.cpp
     src/game/world/Cell.cpp
@@ -27,4 +31,4 @@ add_executable(game
     src/terminal/Terminal.cpp
 )
 
-target_include_directories(game PRIVATE include)
+target_include_directories(game PRIVATE include include/game/statuses)

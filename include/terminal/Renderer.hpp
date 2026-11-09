@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+
 #include "game/world/World.hpp"
 
 struct RenderIcons {
@@ -12,6 +14,13 @@ struct RenderIcons {
     char factory = '+';
     char deadRobot = '%';
     char unknown = '*';
+};
+
+struct RenderStatuses {
+    static constexpr std::string_view slowdown = "\033[30;43m Slowdown \033[0m";
+    static constexpr std::string_view overload = "\033[30;45m Overload \033[0m";
+    static constexpr std::string_view burning = "\033[37;41m Burning \033[0m";
+    static constexpr std::string_view shield = "\033[37;44m Shield \033[0m";
 };
 
 enum class Color {
@@ -53,10 +62,12 @@ class Renderer {
     void drawPlayer(const World& world, const int rowLength);
 
     std::string getInterface(const World& world);
+    std::string getStatusStat(const Player& player);
 
     void setCell(const Point& point, const int rowLength, RenderCell cell);
 
     char getTerrainSymbol(const Cell& cell, bool inRadius) const;
     char getRobotSymbol(const Robot& robot) const;
     char getFactorySymbol() const;
+    std::string getStatusText(StatusType statusType);
 };

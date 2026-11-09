@@ -122,6 +122,39 @@ bool Robot::upgradeAbility(AbilityType abilityType) {
     return false;
 }
 
+void Robot::addStatus(std::unique_ptr<Status> status) {
+    for (auto& currentStatus : statuses_) {
+        if (status->getType() == currentStatus->getType()) {
+            currentStatus->repeat(*status);
+            return;
+        }
+    }
+    statuses_.push_back(std::move(status));
+}
+
+void Robot::addPendingStatus(std::unique_ptr<Status> status) {
+    pendingStatuses_.push_back(std::move(status));
+}
+
+const std::vector<std::unique_ptr<Status>>& Robot::getAllStatuses() const {
+    return statuses_;
+}
+
+std::optional<std::reference_wrapper<Status>> Robot::getStatus(
+    StatusType statusType) const {
+    for (auto& currentStatus : statuses_) {
+        if (currentStatus->getType() == statusType) {
+            return *currentStatus;
+        }
+    }
+    return std::nullopt;
+}
+
+void Robot::clearExpiredStatuses() {
+    std::erase_if(statuses_,
+                  [](const auto& status) { return status->isExpire(); });
+}
+
 int Robot::getX() const { return point_.getX(); }
 
 int Robot::getY() const { return point_.getY(); }
@@ -136,8 +169,17 @@ void Robot::move(int dx, int dy) {
 }
 
 void Robot::onTurnEnd() {
+    for (auto& status : getAllStatuses()) {
+        status->onTurnEnd(*this);
+    }
+
     if (!isDead()) {
         restoreEnergy(defaultEnergyRecovery);
+        clearExpiredStatuses();
+        for (auto& status : pendingStatuses_) {
+            addStatus(std::move(status));
+        }
+        pendingStatuses_.clear();
     }
 }
 
@@ -152,9 +194,13 @@ bool Robot::attack(Robot& other, int damage) {
     return other.isDead();
 }
 
-bool Robot::takeDamage(int amount) {
-    if (amount > 0) {
-        setHealth(health_ - amount);
+bool Robot::takeDamage(int damage) {
+    for (auto& status : getAllStatuses()) {
+        damage = status->absorbDamage(damage);
+    }
+
+    if (damage > 0) {
+        setHealth(health_ - damage);
         if (health_ == 0) {
             return true;
         }

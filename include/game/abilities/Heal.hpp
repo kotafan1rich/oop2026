@@ -3,7 +3,7 @@
 #include "Ability.hpp"
 #include "game/units/Robot.hpp"
 
-constexpr int healCostDeafault = 1;
+constexpr int healCostDeafault = 5;
 constexpr int healCountDeafault = 20;
 
 class Heal final : public Ability {

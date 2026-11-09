@@ -16,8 +16,6 @@ struct RobotConfig {
 
 class Factory {
    private:
-    std::mt19937 generator;
-
     RobotConfig robotConfig_;
     Point point_ = Point(0, 0);
     int height_;
@@ -43,9 +41,9 @@ class Factory {
     int getHeight() const;
     int getWidth() const;
 
-    AbilityType getRandomAbility();
+    AbilityType getRandomAbility(std::mt19937& generator);
 
-    std::unique_ptr<Robot> spawn();
+    std::unique_ptr<Robot> spawn(std::mt19937& generator);
 
     void onTurnEnd();
 };

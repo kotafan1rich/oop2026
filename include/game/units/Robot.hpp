@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "game/abilities/Ability.hpp"
+#include "game/statuses/Status.hpp"
 #include "game/world/Point.hpp"
 
 constexpr int maxHealth = 100;
@@ -34,7 +35,10 @@ class Robot {
     int energy_ = defaultEnergy;
     int maxEnergy_ = defaultMaxEnergy;
     int healCount_ = defaultRobotHeal;
+
     std::vector<std::unique_ptr<Ability>> abilities_;
+    std::vector<std::unique_ptr<Status>> statuses_;
+    std::vector<std::unique_ptr<Status>> pendingStatuses_;
 
    public:
     explicit Robot(int speed = defaultSpeed);
@@ -74,6 +78,13 @@ class Robot {
     std::optional<std::reference_wrapper<Ability>> getAbility(
         AbilityType abilityType) const;
     bool upgradeAbility(AbilityType abilityType);
+
+    void addStatus(std::unique_ptr<Status> status);
+    void addPendingStatus(std::unique_ptr<Status> status);
+    const std::vector<std::unique_ptr<Status>>& getAllStatuses() const;
+    std::optional<std::reference_wrapper<Status>> getStatus(
+        StatusType statusType) const;
+    void clearExpiredStatuses();
 
     bool attack(Robot& other);
     bool attack(Robot& other, int damage);

@@ -7,9 +7,7 @@
 #include "game/units/Robot.hpp"
 
 Factory::Factory(RobotConfig robotConfig, int height, int width)
-    : robotConfig_(robotConfig), height_(height), width_(width) {
-    generator = std::mt19937(std::random_device{}());
-}
+    : robotConfig_(robotConfig), height_(height), width_(width) {}
 
 Factory::~Factory() {}
 
@@ -42,14 +40,14 @@ int Factory::getHeight() const { return height_; }
 
 int Factory::getWidth() const { return width_; }
 
-AbilityType Factory::getRandomAbility() {
+AbilityType Factory::getRandomAbility(std::mt19937& generator) {
     std::uniform_int_distribution<int> choice(0, 1);
     AbilityType abilityType =
         choice(generator) == 0 ? AbilityType::Heal : AbilityType::Teleport;
     return abilityType;
 }
 
-std::unique_ptr<Robot> Factory::spawn() {
+std::unique_ptr<Robot> Factory::spawn(std::mt19937& generator) {
     if (stepCounter_ != getSpawnInterval() - 1) {
         return nullptr;
     }
@@ -59,7 +57,7 @@ std::unique_ptr<Robot> Factory::spawn() {
     newRobot->setMaxEnergy(robotConfig_.maxEnergy);
     newRobot->setMaxHealth(robotConfig_.maxHealth);
 
-    AbilityType abilityType = getRandomAbility();
+    AbilityType abilityType = getRandomAbility(generator);
 
     switch (abilityType) {
         case AbilityType::Heal:

@@ -1,5 +1,10 @@
 #pragma once
 
+#include <random>
+#include <vector>
+
+#include "game/statuses/Status.hpp"
+
 constexpr int defaultMovementCost = 1;
 constexpr int swampMovementCost = 2;
 constexpr int impassableMovementCost = 0;
@@ -18,6 +23,7 @@ class Cell {
     int movementCost_;
     bool isSeen_ = false;
     OccupantType occupant_ = OccupantType::Empty;
+    std::vector<StatusConfig> statuses_;
 
    public:
     Cell(int movementCost = defaultMovementCost);
@@ -34,6 +40,10 @@ class Cell {
     OccupantType getOccupantType() const;
     void setOccupantType(OccupantType occupant);
     void clearOccupant();
+
+    const std::vector<StatusConfig>& statuses() const;
+    void addStatus(StatusConfig status);
+    void removeRandomStatus(std::mt19937& generator);
 
     void markSeen();
     bool isSeen() const;

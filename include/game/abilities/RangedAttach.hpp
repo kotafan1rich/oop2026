@@ -2,7 +2,7 @@
 
 #include "Ability.hpp"
 
-constexpr int rangedAttackCostDeafault = 1;
+constexpr int rangedAttackCostDeafault = 5;
 constexpr int rangedAttackRadiusDefault = 3;
 constexpr int rangedDamageDefault = 15;
 
