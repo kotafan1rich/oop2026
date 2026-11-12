@@ -1,7 +1,7 @@
 #include "game/Game.hpp"
 
 #include "game/abilities/Heal.hpp"
-#include "game/abilities/RangedAttach.hpp"
+#include "game/abilities/RangedAttack.hpp"
 #include "game/abilities/Splash.hpp"
 #include "game/abilities/Teleport.hpp"
 #include "game/units/Player.hpp"
@@ -255,7 +255,7 @@ std::unique_ptr<Ability> Game::createAbility(AbilityType abilityType) const {
         case AbilityType::Splash:
             return std::make_unique<Splash>();
         case AbilityType::RangedAttack: {
-            auto ability = std::make_unique<RangedAttach>();
+            auto ability = std::make_unique<RangedAttack>();
             ability->addAppliedStatus(rangedBurningDefault);
             return ability;
         }

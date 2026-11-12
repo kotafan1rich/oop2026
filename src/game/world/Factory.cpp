@@ -1,7 +1,7 @@
 #include "game/world/Factory.hpp"
 
 #include "game/abilities/Heal.hpp"
-#include "game/abilities/RangedAttach.hpp"
+#include "game/abilities/RangedAttack.hpp"
 #include "game/abilities/Splash.hpp"
 #include "game/abilities/Teleport.hpp"
 #include "game/units/Robot.hpp"
@@ -65,7 +65,7 @@ std::unique_ptr<Robot> Factory::spawn(std::mt19937& generator) {
             break;
 
         case AbilityType::RangedAttack: {
-            auto ability = std::make_unique<RangedAttach>();
+            auto ability = std::make_unique<RangedAttack>();
             ability->addAppliedStatus(rangedBurningDefault);
             newRobot->addAbility(std::move(ability));
             break;

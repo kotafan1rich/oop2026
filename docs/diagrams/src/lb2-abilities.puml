@@ -29,7 +29,7 @@ class Splash {
   + createAppliedStatus() : unique_ptr<Status>
   + upgrade() : void
 }
-class RangedAttach {
+class RangedAttack {
   - cost_ : int
   - range_ : int
   - damage_ : int
@@ -169,7 +169,7 @@ enum InteractResult {
 }
 
 Splash --|> Ability
-RangedAttach --|> Ability
+RangedAttack --|> Ability
 Heal --|> Ability
 Teleport --|> Ability
 Player --|> Robot
@@ -179,9 +179,9 @@ Ability ..> AbilityType : getType()
 Ability ..> World : use()
 Ability ..> Point : target
 Splash *-- StatusConfig : appliedStatusConfig_
-RangedAttach *-- StatusConfig : appliedStatusConfig_
+RangedAttack *-- StatusConfig : appliedStatusConfig_
 Splash ..> Status : createAppliedStatus()
-RangedAttach ..> Status : createAppliedStatus()
+RangedAttack ..> Status : createAppliedStatus()
 Heal ..> Status : createAppliedStatus()
 World *-- "0..*" Robot : robots_
 World *-- "0..1" Player : player_

@@ -10,7 +10,7 @@ add_executable(game
 
     src/game/Game.cpp
     src/game/abilities/Heal.cpp
-    src/game/abilities/RangedAttach.cpp
+    src/game/abilities/RangedAttack.cpp
     src/game/abilities/Splash.cpp
     src/game/abilities/Teleport.cpp
     src/game/navigation/PathFinder.cpp

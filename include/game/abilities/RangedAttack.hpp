@@ -10,7 +10,7 @@ constexpr int rangedAttackRadiusDefault = 3;
 constexpr int rangedDamageDefault = 15;
 constexpr StatusConfig rangedBurningDefault{StatusType::Burning, 3, 5};
 
-class RangedAttach final : public Ability {
+class RangedAttack final : public Ability {
    private:
     int cost_ = rangedAttackCostDeafault;
     int range_ = rangedAttackRadiusDefault;

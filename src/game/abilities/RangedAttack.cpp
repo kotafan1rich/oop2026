@@ -1,10 +1,10 @@
-#include "game/abilities/RangedAttach.hpp"
+#include "game/abilities/RangedAttack.hpp"
 
 #include "game/statuses/Burning.hpp"
 #include "game/units/Robot.hpp"
 #include "game/world/World.hpp"
 
-bool RangedAttach::use(Robot& owner, World& world,
+bool RangedAttack::use(Robot& owner, World& world,
                        std::optional<Point> target) {
     if (!target) {
         return false;
@@ -39,19 +39,19 @@ bool RangedAttach::use(Robot& owner, World& world,
     return true;
 }
 
-int RangedAttach::energyCost() const { return cost_; }
+int RangedAttack::energyCost() const { return cost_; }
 
-int RangedAttach::range() const { return range_; }
+int RangedAttack::range() const { return range_; }
 
-AbilityType RangedAttach::getType() const { return AbilityType::RangedAttack; }
+AbilityType RangedAttack::getType() const { return AbilityType::RangedAttack; }
 
-void RangedAttach::addAppliedStatus(StatusConfig statusConfig) {
+void RangedAttack::addAppliedStatus(StatusConfig statusConfig) {
     appliedStatusConfig_ = statusConfig;
 }
 
-std::unique_ptr<Status> RangedAttach::createAppliedStatus() {
+std::unique_ptr<Status> RangedAttack::createAppliedStatus() {
     return std::make_unique<Burning>(appliedStatusConfig_.turns,
                                      appliedStatusConfig_.value);
 }
 
-void RangedAttach::upgrade() { damage_ += 5; }
+void RangedAttack::upgrade() { damage_ += 5; }
